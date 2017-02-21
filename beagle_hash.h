@@ -6,21 +6,46 @@
 #endif
 
 #if DEBUG_BEAGLE_HASH == 1
-#define WARN3(pat,v0,v1,v2)         printf(pat, v0, v1, v2)
-#define NOTE3(pat,v0,v1,v2)         printf(pat, v0, v1, v2)
+#define WARN6(pat,v0,v1,v2,v3,v4,v5)    printf(pat, v0, v1, v2, v3, v4, v5)
+#define WARN5(pat,v0,v1,v2,v3,v4)       printf(pat, v0, v1, v2, v3, v4)
+#define WARN4(pat,v0,v1,v2,v3)          printf(pat, v0, v1, v2, v3)
+#define WARN3(pat,v0,v1,v2)             printf(pat, v0, v1, v2)
+#define WARN2(pat,v0,v1)                printf(pat, v0, v1)
+#define NOTE3(pat,v0,v1,v2)             printf(pat, v0, v1, v2)
 #elif DEBUG_BEAGLE_HASH == 2
+#define WARN6(pat,v0,v1,v2,v3,v4,v5)
+#define WARN5(pat,v0,v1,v2,v3,v4)
+#define WARN4(pat,v0,v1,v2,v3)
 #define WARN3(pat,v0,v1,v2)
-#define NOTE3(pat,v0,v1,v2)         printf(pat, v0, v1, v2)
+#define WARN2(pat,v0,v1)
+#define NOTE3(pat,v0,v1,v2)             printf(pat, v0, v1, v2)
 #else
+#define WARN6(pat,v0,v1,v2,v3,v4,v5)
+#define WARN5(pat,v0,v1,v2,v3,v4)
+#define WARN4(pat,v0,v1,v2,v3)
 #define WARN3(pat,v0,v1,v2)
 #define NOTE3(pat,v0,v1,v2)
+#define WARN2(pat,v0,v1)
 #endif
 
 #include <stdint.h>
 
-#define _ROTL_SIZED(x,r,s) ( (x >> r) | (x << (s - r)) )
+#define _ROTL_SIZED(x,r,s) (((x) >> (r)) | ((x) << ((s) - (r))))
+#define _ROTR_SIZED(x,r,s) (((x) << (r)) | ((x) >> ((s) - (r))))
 #define ROTL_32(x,r) _ROTL_SIZED(x,r,32)
 #define ROTL_64(x,r) _ROTL_SIZED(x,r,64)
+#define ROTR_32(x,r) _ROTL_SIZED(x,r,32)
+#define ROTR_64(x,r) _ROTL_SIZED(x,r,64)
+
+#define _XORSHIFT(v, s1, s2, s3) STMT_START { \
+        v ^= ( v << s1 );   \
+        v ^= ( v >> s2 );   \
+        v ^= ( v << s3 );   \
+} STMT_END
+#define XORSHIFT0(v) _XORSHIFT(v,13,17,5)
+#define XORSHIFT1(v) _XORSHIFT(v,11,17,13)
+#define XORSHIFT2(v) _XORSHIFT(v,2,15,25)
+#define XORSHIFT3(v) _XORSHIFT(v,12,9,23)
 
 
 #if !defined(U64)
@@ -47,19 +72,30 @@
 #endif
 
 #define U8TO64_LE(ptr)  (*((const U64 *)(ptr)))
+#define U8TO32_LE(ptr)  (*((const U32 *)(ptr)))
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void beagle_hash32_64_a_smhasher_test(const void *key, int len, U32 seed_base, void *out);
-void beagle_hash32_96_a_smhasher_test(const void *key, STRLEN len, U32 seed_base, void *out);
-void beagle_hash32_112_a_smhasher_test(const void *key, STRLEN len, U32 seed_base, void *out);
-void beagle_hash32_127_a_smhasher_test(const void *key, STRLEN len, U32 seed_base, void *out);
-void beagle_hash64_64_a_smhasher_test(const void *key, int len, U32 seed_base, void *out);
-void beagle_hash64_96_a_smhasher_test(const void *key, STRLEN len, U32 seed_base, void *out);
-void beagle_hash64_112_a_smhasher_test(const void *key, STRLEN len, U32 seed_base, void *out);
-void beagle_hash64_127_a_smhasher_test(const void *key, STRLEN len, U32 seed_base, void *out);
+void beagle_hash_32_32_a_smhasher_test  (const void *key, STRLEN len, U32 seed_base, void *out);
+void beagle_hash_32_64_a_smhasher_test  (const void *key, STRLEN len, U32 seed_base, void *out);
+void beagle_hash_32_96_a_smhasher_test  (const void *key, STRLEN len, U32 seed_base, void *out);
+void beagle_hash_32_112_a_smhasher_test (const void *key, STRLEN len, U32 seed_base, void *out);
+void beagle_hash_32_127_a_smhasher_test (const void *key, STRLEN len, U32 seed_base, void *out);
+void beagle_hash_64_32_a_smhasher_test  (const void *key, STRLEN len, U32 seed_base, void *out);
+void beagle_hash_64_64_a_smhasher_test  (const void *key, STRLEN len, U32 seed_base, void *out);
+void beagle_hash_64_96_a_smhasher_test  (const void *key, STRLEN len, U32 seed_base, void *out);
+void beagle_hash_64_112_a_smhasher_test (const void *key, STRLEN len, U32 seed_base, void *out);
+void beagle_hash_64_127_a_smhasher_test (const void *key, STRLEN len, U32 seed_base, void *out);
+
+void beagle_hash_32_128_a_smhasher( const void *blob, const int len, const void *seed, void *out );
+void beagle_hash_64_128_a_smhasher( const void *blob, const int len, const void *seed, void *out );
+void beagle_hash_seed_prep_smhasher( const int in_bits, const void *seed_base, const void *seed_prepared );
+
+void zaphod_hash_smhasher_test       (const void *key, STRLEN len, U32 seed_base, void *out);
+void phat_hash_smhasher_test       (const void *key, STRLEN len, U32 seed_base, void *out);
+void phat4_hash_smhasher_test       (const void *key, STRLEN len, U32 seed_base, void *out);
 
 #ifdef __cplusplus
 }
