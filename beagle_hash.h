@@ -47,6 +47,14 @@
 #define XORSHIFT2(v) _XORSHIFT(v,2,15,25)
 #define XORSHIFT3(v) _XORSHIFT(v,12,9,23)
 
+#define XORSHIFT128plus(s0,s1) STMT_START {        \
+    U64 x = s0;                                     \
+    U64 const y = s1;                               \
+    s0 = y;                                         \
+    x ^= x << 23; /* a */                           \
+    s1 = x ^ y ^ (x >> 17) ^ (y >> 26); /* b, c */  \
+} STMT_END
+
 
 #if !defined(U64)
   #define U64 uint64_t
@@ -58,6 +66,10 @@
 
 #if !defined(U8)
     #define U8 unsigned char
+#endif
+
+#if !defined(U16)
+    #define U16 uint16_t
 #endif
 
 #ifndef STRLEN
@@ -78,28 +90,23 @@
 extern "C" {
 #endif
 
-void beagle_hash_32_32_a_smhasher_test  (const void *key, STRLEN len, U32 seed_base, void *out);
-void beagle_hash_32_64_a_smhasher_test  (const void *key, STRLEN len, U32 seed_base, void *out);
-void beagle_hash_32_96_a_smhasher_test  (const void *key, STRLEN len, U32 seed_base, void *out);
-void beagle_hash_32_112_a_smhasher_test (const void *key, STRLEN len, U32 seed_base, void *out);
-void beagle_hash_32_127_a_smhasher_test (const void *key, STRLEN len, U32 seed_base, void *out);
-void beagle_hash_64_32_a_smhasher_test  (const void *key, STRLEN len, U32 seed_base, void *out);
-void beagle_hash_64_64_a_smhasher_test  (const void *key, STRLEN len, U32 seed_base, void *out);
-void beagle_hash_64_96_a_smhasher_test  (const void *key, STRLEN len, U32 seed_base, void *out);
-void beagle_hash_64_112_a_smhasher_test (const void *key, STRLEN len, U32 seed_base, void *out);
-void beagle_hash_64_127_a_smhasher_test (const void *key, STRLEN len, U32 seed_base, void *out);
+void beagle_hash_32_32_a_smhasher_test (const void *key, STRLEN len, U32 seed, void *out);
+void beagle_hash_32_64_a_smhasher_test (const void *key, STRLEN len, U32 seed, void *out);
+void beagle_hash_32_96_a_smhasher_test (const void *key, STRLEN len, U32 seed, void *out);
+void beagle_hash_32_112_a_smhasher_test (const void *key, STRLEN len, U32 seed, void *out);
+void beagle_hash_32_127_a_smhasher_test (const void *key, STRLEN len, U32 seed, void *out);
+void beagle_hash_64_32_a_smhasher_test (const void *key, STRLEN len, U32 seed, void *out);
+void beagle_hash_64_64_a_smhasher_test (const void *key, STRLEN len, U32 seed, void *out);
+void beagle_hash_64_96_a_smhasher_test (const void *key, STRLEN len, U32 seed, void *out);
+void beagle_hash_64_112_a_smhasher_test (const void *key, STRLEN len, U32 seed, void *out);
+void beagle_hash_64_127_a_smhasher_test (const void *key, STRLEN len, U32 seed, void *out);
 
-void beagle_hash_32_128_a_smhasher( const void *blob, const int len, const void *seed, void *out );
-void beagle_hash_64_128_a_smhasher( const void *blob, const int len, const void *seed, void *out );
-void beagle_hash_seed_prep_smhasher( const int in_bits, const void *seed_base, const void *seed_prepared );
-
-void zaphod_hash_smhasher_test       (const void *key, STRLEN len, U32 seed_base, void *out);
-void phat_hash_smhasher_test       (const void *key, STRLEN len, U32 seed_base, void *out);
-void phat4_hash_smhasher_test       (const void *key, STRLEN len, U32 seed_base, void *out);
+void beagle_hash_with_state_32_128_a_smhasher ( const void *blob, const int len, const void *seed, void *out );
+void beagle_hash_with_state_64_128_a_smhasher ( const void *blob, const int len, const void *seed, void *out );
+void beagle_seed_state_128_a_smhasher ( const int in_bits, const void *seed, const void *state );
 
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif
