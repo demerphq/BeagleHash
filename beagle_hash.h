@@ -34,8 +34,8 @@
 #define _ROTR_SIZED(x,r,s) (((x) << (r)) | ((x) >> ((s) - (r))))
 #define ROTL_32(x,r) _ROTL_SIZED(x,r,32)
 #define ROTL_64(x,r) _ROTL_SIZED(x,r,64)
-#define ROTR_32(x,r) _ROTL_SIZED(x,r,32)
-#define ROTR_64(x,r) _ROTL_SIZED(x,r,64)
+#define ROTR_32(x,r) _ROTR_SIZED(x,r,32)
+#define ROTR_64(x,r) _ROTR_SIZED(x,r,64)
 
 #define _XORSHIFT(v, s1, s2, s3) STMT_START { \
         v ^= ( v << s1 );   \
