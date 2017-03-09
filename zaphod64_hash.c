@@ -18,14 +18,14 @@ extern "C" {
 #define ZAPHOD64_MIX(v0,v1,v2,text) STMT_START {                            \
     WARN4("v0=%016lx v1=%016lx v2=%016lx - ZAPHOD64 %s MIX\n",              \
             (unsigned long)v0,(unsigned long)v1,(unsigned long)v2, text );  \
-    v0 = ROTL_64(v0, 8) + v1;   \
-    v1 = ROTL_64(v1,23) ^ v2;   \
-    v2 = ROTL_64(v2,53) ^ v0;   \
-    v0 = ROTR_64(v0,48) - v2;   \
-    v2 = ROTR_64(v2,47) + v1;   \
-    v1 = ROTL_64(v1,29) - v0;   \
-    v0 = ROTL_64(v0,29) ^ v2;   \
-    v2 = ROTR_64(v2,49) + v0;   \
+    v0 = ROTL_64(v0,57) + v1;   \
+    v1 = ROTL_64(v1,43) ^ v2;   \
+    v2 = ROTL_64(v2,24) ^ v0;   \
+    v0 = ROTR_64(v0, 5) + v2;   \
+    v2 = ROTR_64(v2, 8) - v1;   \
+    v1 = ROTR_64(v1,63) ^ v0;   \
+    v0 = ROTL_64(v0,17) ^ v2;   \
+    v2 = ROTL_64(v2,55) - v0;   \
 } STMT_END
 
 #define ZAPHOD64_FINALIZE(v0,v1,v2) STMT_START { \

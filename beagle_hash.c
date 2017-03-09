@@ -111,28 +111,26 @@ BEAGLE_STATIC_INLINE U64 beagle_hash_with_state_64_128_a(
     const STRLEN key_len
 ) {
     U64 *seed= (U64 *)seed_ch;
-    U64 v0= (U64)seed[0];
-    U64 v1= (U64)seed[1];
+    U64 v0= (U64)seed[0] ^ (k5_U64 * (key_len + 1));
+    U64 v1= (U64)seed[1] ^ (k6_U64 * (key_len + 2));
     U64 v;
-    STRLEN tail = key_len & 0xF;
+    U64 len = key_len;
 
-    if ( key_len >= 16 ) {
-        const U8 *end= key + key_len - tail;
-        do {
-            v = U8TO64_LE(key); key += 8;
-            MIXV0(v,v0,v1);
-            v = U8TO64_LE(key); key += 8;
-            MIXV1(v,v0,v1);
-        } while (key < end);
+    while ( len >= 16 ) {
+        v = U8TO64_LE(key); key += 8;
+        MIXV0(v,v0,v1);
+        v = U8TO64_LE(key); key += 8;
+        MIXV1(v,v0,v1);
+        len -= 16;
     }
 
-    if ( tail >= 8 ) {
+    if ( len >= 8 ) {
         v = U8TO64_LE(key); key += 8;
         MIXV2(v,v0,v1);
     }
 
-    v= ((U64)~key_len) << 56;
-    switch (tail & 0x7) {
+    v= ((U64)key_len+1) << 56;
+    switch (len & 0x7) {
         case 7: v += (U64)key[6] << 48;
         case 6: v += (U64)key[5] << 40;
         case 5: v += (U64)key[4] << 32;
