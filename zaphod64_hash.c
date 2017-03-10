@@ -16,7 +16,7 @@ extern "C" {
 } STMT_END
 
 #define ZAPHOD64_MIX(v0,v1,v2,text) STMT_START {                            \
-    WARN4("v0=%016lx v1=%016lx v2=%016lx - ZAPHOD64 %s MIX\n",              \
+    WARN4("v0=%016lx v1=%016lx v2=%016lx - ZAPHOD64 %s MIX STEP 1\n",       \
             (unsigned long)v0,(unsigned long)v1,(unsigned long)v2, text );  \
     v0 = ROTL_64(v0,57) + v1;   \
     v1 = ROTL_64(v1,43) ^ v2;   \
@@ -29,6 +29,8 @@ extern "C" {
 } STMT_END
 
 #define ZAPHOD64_FINALIZE(v0,v1,v2) STMT_START { \
+    WARN3("v0=%016lx v1=%016lx v2=%016lx - ZAPHOD64 ENTER FINALIZE\n",  \
+            (unsigned long)v0,(unsigned long)v1,(unsigned long)v2 );    \
     v0 = ROTR_64(v0,61) - v2;   \
     v2 ^= v1;                   \
     v2 = ROTL_64(v2, 8) - v0;   \
@@ -44,6 +46,8 @@ extern "C" {
     v2 = ROTL_64(v2, 9);        \
     v1 -= v2;                   \
     v1 = ROTR_64(v1,19);        \
+    WARN3("v0=%016lx v1=%016lx v2=%016lx - ZAPHOD64 MID FINALIZE\n",  \
+            (unsigned long)v0,(unsigned long)v1,(unsigned long)v2 );    \
     v2 ^= v1;                   \
     v1 -= v0;                   \
     v2 = ROTR_64(v2,40);        \
@@ -71,17 +75,16 @@ BEAGLE_STATIC_INLINE void zaphod64_seed_state (
     state[2] |= ((~seed[2]) & 0x01); /* and add in the reverse of the low bits */
     /* at this point we are guaranteed that seed[2] has at least one 0-bit,
      * and one 1-bit. Which means the overall seed does too. */
-    /* then mix the shift out of them */
-    ZAPHOD64_MIX(state[0],state[1],state[2],"SEED-STATE 1/4");
-    ZAPHOD64_MIX(state[0],state[1],state[2],"SEED-STATE 2/4");
-    ZAPHOD64_MIX(state[0],state[1],state[2],"SEED-STATE 3/4");
-    /* and then scramble them too for good measure */
-    WARN3("v0=%016lx v1=%016lx v2=%016lx - ZAPHOD64 SEED-STATE SCRAMBLE\n",
-            (unsigned long)state[0], (unsigned long)state[1], (unsigned long)state[2]);
-    SCRAMBLE64(state[0],0x801178846e899d17UL);
-    SCRAMBLE64(state[1],0x803340f36895c2b5UL);
-    SCRAMBLE64(state[2],0x80445170f5f2e0b1UL);
-    ZAPHOD64_MIX(state[0],state[1],state[2],"SEED-STATE 4/4");
+    if (0) {
+        /* then mix the shift out of them */
+        ZAPHOD64_MIX(state[0],state[1],state[2],"SEED-STATE 1/4");
+        SCRAMBLE64(state[0],0x801178846e899d17UL);
+        ZAPHOD64_MIX(state[0],state[1],state[2],"SEED-STATE 2/4");
+        SCRAMBLE64(state[1],0x803340f36895c2b5UL);
+        ZAPHOD64_MIX(state[0],state[1],state[2],"SEED-STATE 3/4");
+        SCRAMBLE64(state[2],0x80445170f5f2e0b1UL);
+        ZAPHOD64_MIX(state[0],state[1],state[2],"SEED-STATE 4/4");
+    }
     WARN3("v0=%016lx v1=%016lx v2=%016lx - ZAPHOD64 SEED-STATE FINAL\n",
             (unsigned long)state[0], (unsigned long)state[1], (unsigned long)state[2]);
 }
@@ -98,13 +101,15 @@ BEAGLE_STATIC_INLINE U64 zaphod64_hash_with_state(
     U64 len= key_len;
     U64 hash;
 
-    WARN4("v0=%16lx v1=%16lx v2=%16lx ln=%16lx HASH START\n",
+    WARN4("v0=%016lx v1=%016lx v2=%016lx ln=%016lx - ZAPHOD64 HASH START\n",
             (unsigned long)state[0], (unsigned long)state[1],
             (unsigned long)state[2], (unsigned long)key_len);
     while ( len >= 32 ) {
+        WARN2("m0=%016lx m1=%016lx - ZAPHOD64 READ 2-WORDS A\n",U8TO64_LE(key),U8TO64_LE(key+8));
         v1 -= U8TO64_LE(key); key += 8;
         v0 += U8TO64_LE(key); key += 8;
         ZAPHOD64_MIX(v0,v1,v2,"MIX 2-WORDS A");
+        WARN2("m0=%016lx m1=%016lx - ZAPHOD64 READ 2-WORDS B\n",U8TO64_LE(key),U8TO64_LE(key+8));
         v1 -= U8TO64_LE(key); key += 8;
         v0 += U8TO64_LE(key); key += 8;
         ZAPHOD64_MIX(v0,v1,v2,"MIX 2-WORDS B");
@@ -112,13 +117,16 @@ BEAGLE_STATIC_INLINE U64 zaphod64_hash_with_state(
     }
     switch ( len >> 3 ) {
         case 3:
+                WARN2("m0=%016lx m1=%016lx - ZAPHOD64 READ 2-WORDS C\n",U8TO64_LE(key),U8TO64_LE(key+8));
                 v1 -= U8TO64_LE(key); key += 8;
                 v0 += U8TO64_LE(key); key += 8;
                 ZAPHOD64_MIX(v0,v1,v2,"MIX 2-WORDS C");
         case 1:
+                WARN2("m0=%016lx %s",U8TO64_LE(key),"");
                 v1 -= U8TO64_LE(key); key += 8;
                 break;
         case 2:
+                WARN2("m0=%016lx m1=%016lx - ZAPHOD64 READ 2-WORDS D\n",U8TO64_LE(key),U8TO64_LE(key+8));
                 v1 -= U8TO64_LE(key); key += 8;
                 v0 += U8TO64_LE(key); key += 8;
                 ZAPHOD64_MIX(v0,v1,v2,"MIX 2-WORDS D");
@@ -126,6 +134,27 @@ BEAGLE_STATIC_INLINE U64 zaphod64_hash_with_state(
         case 0:
         default: break;
     }
+    if (DEBUG_BEAGLE_HASH) {
+        uint64_t vx = ((U64)(key_len+1) << 56);
+        uint64_t vy = 0;
+        switch (len & 0x7) {
+            case 7: vx += (U64)key[6] << 48;
+            case 6: vx += (U64)key[5] << 40;
+            case 5: vx += (U64)key[4] << 32;
+            case 4: vx += *((U32 *)key);
+                    break;
+            case 3: vx += (U64)key[2] << 16;
+            case 2: vx += *((U16 *)key);
+                    break;
+            case 1: vx += (U64)key[0];
+                    break;
+            case 0:
+            default:vy ^= 0xFF;
+                    break;
+        }
+        WARN2("vx=%016lx vy=%016lx - ZAPHOD64 READ FINAL\n",vx,vy);
+    }
+
     v0 += ((U64)(key_len+1) << 56);
     switch (len & 0x7) {
         case 7: v0 += (U64)key[6] << 48;
@@ -145,7 +174,7 @@ BEAGLE_STATIC_INLINE U64 zaphod64_hash_with_state(
     ZAPHOD64_FINALIZE(v0,v1,v2);
     hash = v0 ^ v1 ^ v2;
 
-    WARN4("v0=%16lx v1=%16lx v2=%16lx hh=%16lx - FINAL\n\n",
+    WARN4("v0=%016lx v1=%016lx v2=%016lx hh=%016lx - ZAPHOD64 FINAL\n\n",
             (unsigned long)v0, (unsigned long)v1, (unsigned long)v2,
             (unsigned long)hash);
     return hash;
