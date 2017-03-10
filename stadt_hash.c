@@ -135,7 +135,7 @@ BEAGLE_STATIC_INLINE U64 stadt64_hash(
     return stadt64_hash_with_state((U8*)state,key,key_len);
 }
 
-void stadt64_seed_state_smhasher_test(int in_bits, const void *seed, const void *state) {
+void stadt64_seed_state_smhasher_test(int in_bits, const void *seed, void *state) {
     stadt64_seed_state((U8*)seed,(U8*)state);
 }
 

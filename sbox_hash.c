@@ -192,7 +192,7 @@ void sbox_hash_smhasher_test(const void *key, STRLEN len, U32 seed_base, void *o
     *((U64 *)out)= sbox_hash((U8*)seed, (U8 *)key, len);
 }
 
-void sbox_seed_state_smhasher_test(int in_bits, const void *seed, const void *state) {
+void sbox_seed_state_smhasher_test(int in_bits, const void *seed, void *state) {
     sbox_seed_state((U8*)seed,(U8*)state);
 }
 

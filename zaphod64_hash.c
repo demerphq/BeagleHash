@@ -195,7 +195,7 @@ void zaphod64_hash_smhasher_test(const void *key, STRLEN len, U32 seed_base, voi
     *((U64 *)out)= zaphod64_hash((U8*)seed, (U8 *)key, len);
 }
 
-void zaphod64_seed_state_smhasher_test(int in_bits, const void *seed, const void *state) {
+void zaphod64_seed_state_smhasher_test(int in_bits, const void *seed, void *state) {
     zaphod64_seed_state((U8*)seed,(U8*)state);
 }
 

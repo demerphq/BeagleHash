@@ -279,7 +279,7 @@ void beagle_hash_with_state_64_128_a_smhasher(const void *key, STRLEN len, const
     *((U64 *)out)= beagle_hash_with_state_64_128_a((U8*)state, (U8 *)key, len);
 }
 
-void beagle_seed_state_128_a_smhasher( const int in_bits, const void *seed_base, const void *state ) {
+void beagle_seed_state_128_a_smhasher( const int in_bits, const void *seed_base, void *state ) {
     switch( in_bits ) {
         case  64:
             beagle_seed_state_64_128_a((U8*)seed_base,(U8*)state);

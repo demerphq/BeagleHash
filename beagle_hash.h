@@ -103,7 +103,7 @@ void beagle_hash_64_127_a_smhasher_test (const void *key, STRLEN len, U32 seed, 
 
 void beagle_hash_with_state_32_128_a_smhasher ( const void *blob, const int len, const void *seed, void *out );
 void beagle_hash_with_state_64_128_a_smhasher ( const void *blob, const int len, const void *seed, void *out );
-void beagle_seed_state_128_a_smhasher ( const int in_bits, const void *seed, const void *state );
+void beagle_seed_state_128_a_smhasher ( const int in_bits, const void *seed, void *state );
 
 #ifdef __cplusplus
 }

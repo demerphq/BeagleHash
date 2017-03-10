@@ -6,7 +6,7 @@
 extern "C" {
 #endif
 
-void zaphod32_seed_state_smhasher_test(int in_bits, const void *seed, const void *state);
+void zaphod32_seed_state_smhasher_test(int in_bits, const void *seed, void *state);
 void zaphod32_hash_with_state_smhasher_test(const void *key, STRLEN len, const void *seed, void *out);
 void zaphod32_hash_smhasher_test (const void *key, STRLEN len, U32 seed, void *out);
 
