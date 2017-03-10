@@ -176,19 +176,6 @@ BEAGLE_STATIC_INLINE U32 beagle_hash_with_state_32_128_a(
 }
 
 
-BEAGLE_STATIC_INLINE void beagle_seed_state_32_128_a(
-    const U8 *seed_ch,
-    const U8 *seed_state_ch
-) {
-    U32 *seed_base= (U32 *)seed_ch;
-    U32 *state= (U32 *)seed_state_ch;
-
-    state[0] = seed_base[0] ^ 0x9555DC8BUL;
-    state[1] = seed_base[0] ^ 0xF98B2A27UL;
-    state[2] = seed_base[0] ^ 0xD0DC8056UL;
-    state[3] = seed_base[0];
-}
-
 BEAGLE_STATIC_INLINE void beagle_seed_state_64_128_a(
     const U8 *seed_ch,
     const U8 *seed_state_ch
@@ -272,13 +259,11 @@ void beagle_hash_ ## out_bits ## _ ## in_bits ## _a_smhasher_test(          \
     *((ret_type *)out)= beagle_hash_ ## out_bits ## _ ## in_bits ## _a((U8*)seed, (U8 *)key, len); \
 }
 
-BEAGLE_HASH(U64,64,32,"%016lx",unsigned long)
 BEAGLE_HASH(U64,64,64,"%016lx",unsigned long)
 BEAGLE_HASH(U64,64,96,"%016lx",unsigned long)
 BEAGLE_HASH(U64,64,112,"%016lx",unsigned long)
 BEAGLE_HASH(U64,64,127,"%016lx",unsigned long)
 BEAGLE_HASH(U64,64,128,"%016lx",unsigned long)
-BEAGLE_HASH(U64,32,32,"%08x",unsigned int)
 BEAGLE_HASH(U64,32,64,"%08x",unsigned int)
 BEAGLE_HASH(U64,32,96,"%08x",unsigned int)
 BEAGLE_HASH(U64,32,112,"%08x",unsigned int)
@@ -296,9 +281,6 @@ void beagle_hash_with_state_64_128_a_smhasher(const void *key, STRLEN len, const
 
 void beagle_seed_state_128_a_smhasher( const int in_bits, const void *seed_base, const void *state ) {
     switch( in_bits ) {
-        case  32:
-            beagle_seed_state_32_128_a((U8*)seed_base,(U8*)state);
-            break;
         case  64:
             beagle_seed_state_64_128_a((U8*)seed_base,(U8*)state);
             break;
