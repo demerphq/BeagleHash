@@ -30,8 +30,8 @@
 
 #include <stdint.h>
 
-#define _ROTL_SIZED(x,r,s) (((x) >> (r)) | ((x) << ((s) - (r))))
-#define _ROTR_SIZED(x,r,s) (((x) << (r)) | ((x) >> ((s) - (r))))
+#define _ROTL_SIZED(x,r,s) (((x) << (r)) | ((x) >> ((s) - (r))))
+#define _ROTR_SIZED(x,r,s) (((x) >> (r)) | ((x) << ((s) - (r))))
 #define ROTL_32(x,r) _ROTL_SIZED(x,r,32)
 #define ROTL_64(x,r) _ROTL_SIZED(x,r,64)
 #define ROTR_32(x,r) _ROTR_SIZED(x,r,32)
