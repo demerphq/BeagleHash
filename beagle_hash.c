@@ -87,14 +87,25 @@ extern "C" {
 #define MIXV2(v,v0,v1) MIXV0_8mul(v,v0,v1,k2_U64)
 #define MIXV3(v,v0,v1) MIXV1_8mul(v,v0,v1,k3_U64)
 
-#define BEAGLE_MUNGE_SEED(seed,state,bits,rounds) STMT_START {      \
-    int irounds = rounds;                                           \
-    state[0] = seed[0];                                             \
+#define SCRAMBLE64(v,prime) STMT_START {  \
+    v ^= (v>>13);                        \
+    v ^= (v<<35);                       \
+    v ^= (v>>30);                       \
+    v *= prime;                         \
+    v ^= (v>>19);                       \
+    v ^= (v<<15);                       \
+    v ^= (v>>46);                       \
+} STMT_END
+
+
+#define BEAGLE_MUNGE_SEED(seed,state,bits) STMT_START {             \
+    state[0] = seed[0] ^ 0x933a4a3f54ba4bafUL;                      \
     state[1] = (seed[1] << (128 - bits))                            \
-            | ((~seed[0]) >> (64 -(128-bits)));                     \
-    do {                                                            \
-        BEAGLE_FINALIZE(state[0],state[1]);                         \
-    } while (--irounds>0);                                          \
+            | ((~seed[1]) >> (64 -(128-bits)));                     \
+    if (!state[0]) state[0]=1;                                      \
+    SCRAMBLE64(state[0],0xb37337df3d56d90bUL);                      \
+    SCRAMBLE64(state[1],0x819ffd05fcf65945UL);                      \
+    BEAGLE_FINALIZE(state[0],state[1]);                             \
 } STMT_END
 
 #define BEAGLE_SEED_PREP_WITH_DECL(bits,seed_ch,seed)               \
@@ -195,7 +206,7 @@ BEAGLE_STATIC_INLINE void beagle_seed_state_96_128_a(
     U64 *seed_base= (U64 *)seed_ch;
     U64 *state= (U64 *)seed_state_ch;
 
-    BEAGLE_MUNGE_SEED(seed_base,state,96,1);
+    BEAGLE_MUNGE_SEED(seed_base,state,96);
 }
 
 BEAGLE_STATIC_INLINE void beagle_seed_state_112_128_a(
@@ -205,7 +216,7 @@ BEAGLE_STATIC_INLINE void beagle_seed_state_112_128_a(
     U64 *seed_base= (U64 *)seed_ch;
     U64 *state= (U64 *)seed_state_ch;
 
-    BEAGLE_MUNGE_SEED(seed_base,state,112,2);
+    BEAGLE_MUNGE_SEED(seed_base,state,112);
 }
 
 BEAGLE_STATIC_INLINE void beagle_seed_state_127_128_a(
@@ -215,7 +226,7 @@ BEAGLE_STATIC_INLINE void beagle_seed_state_127_128_a(
     U64 *seed_base= (U64 *)seed_ch;
     U64 *state= (U64 *)seed_state_ch;
 
-    BEAGLE_MUNGE_SEED(seed_base,state,127,2);
+    BEAGLE_MUNGE_SEED(seed_base,state,127);
 }
 
 /* this is the same as 127 */
@@ -226,7 +237,7 @@ BEAGLE_STATIC_INLINE void beagle_seed_state_128_128_a(
     U64 *seed_base= (U64 *)seed_ch;
     U64 *state= (U64 *)seed_state_ch;
 
-    BEAGLE_MUNGE_SEED(seed_base,state,127,2);
+    BEAGLE_MUNGE_SEED(seed_base,state,127);
 }
 
 

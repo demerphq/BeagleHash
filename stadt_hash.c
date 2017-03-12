@@ -2,7 +2,7 @@
 extern "C" {
 #endif
 
-#include "beagle_hash.h"
+#include "stadt_hash.h"
 #include <stdio.h>
 
 #define SCRAMBLE64(v,prime) STMT_START {  \
@@ -16,20 +16,16 @@ extern "C" {
 } STMT_END
 
 
-BEAGLE_STATIC_INLINE void stadt64_seed_state (
+BEAGLE_STATIC_INLINE void stadt_seed_state (
     const U8 *seed_ch,
     const U8 *state_ch
 ) {
     U64 *seed= (U64 *)seed_ch;
     U64 *state= (U64 *)state_ch;
-    state[0]= seed[0] ^ 0xad1e48c158bd9789UL;
-    state[1]= seed[1] ^ 0x89c9cd2ca7802fe9UL;
-    state[2]= seed[0];
-    state[3]= seed[1];
-    if (!state[0]) state[0]= 1;
-    if (!state[1]) state[1]= 1;
-    if (!state[2]) state[2]= 1;
-    if (!state[3]) state[3]= 1;
+    state[0]= seed[0] ^ 0xdd51e5d1c9a5a151UL;
+    state[1]= seed[1] ^ 0x49bd91d595cd41bdUL;
+    state[2]= seed[0] ^ 0xbda10db5bd91b985UL;
+    state[3]= seed[1] ^ 0xcd95d1e509b995cdUL;
     SCRAMBLE64(state[0],0x801178846e899d17UL);
     SCRAMBLE64(state[1],0x803340f36895c2b5UL);
     SCRAMBLE64(state[2],0xbea9344eb7565eebUL);
@@ -43,7 +39,7 @@ BEAGLE_STATIC_INLINE void stadt64_seed_state (
 #define k4_U32 0xc664f39d
 #define k5_U32 0xde0784f1
 
-BEAGLE_STATIC_INLINE U64 stadt64_hash_with_state(
+BEAGLE_STATIC_INLINE U64 stadt_hash_with_state(
     const U8 *state_ch,
     const U8 *key,
     const STRLEN key_len
@@ -59,88 +55,83 @@ BEAGLE_STATIC_INLINE U64 stadt64_hash_with_state(
     U64 t3= v3;
     U64 len= key_len;
 
-    while ( len >= 32 ) {
-        v0 += U8TO64_LE(key) * k2_U32; key += 8; v0= ROTR_64(v0,7)  ^ t3;
-        v1 += U8TO64_LE(key) * k3_U32; key += 8; v1= ROTR_64(v1,11) ^ t2;
-        v2 += U8TO64_LE(key) * k4_U32; key += 8; v2= ROTR_64(v2,13) ^ t0;
-        v3 += U8TO64_LE(key) * k5_U32; key += 8; v3= ROTR_64(v3,19) ^ t1;
-        t0 = v0; t1 = v1; t2 = v2; t3 = v3;
-        len -= 32;
+    while ( len >= 16 ) {
+        v0 += ((U64)U8TO32_LE(key+ 0) * k2_U32); v0= ROTL_64(v0,31) ^ t3;
+        v1 += ((U64)U8TO32_LE(key+ 4) * k3_U32); v1= ROTL_64(v1,43) ^ t2;
+        v2 += ((U64)U8TO32_LE(key+ 8) * k4_U32); v2= ROTL_64(v2,17) ^ t0;
+        v3 += ((U64)U8TO32_LE(key+12) * k5_U32); v3= ROTL_64(v3,61) ^ t1;
+        t0 = v0; t1= v1; t2 = v2; t3 = v3;
+        len -= 16;
+        key += 16;
     }
-    switch ( len >> 3 ) {
-        case 3: v0 += U8TO64_LE(key) * k2_U32; key += 8; v0= ROTR_64(v0, 7) ^ t3; 
-        case 2: v1 += U8TO64_LE(key) * k3_U32; key += 8; v1= ROTR_64(v1,11) ^ t2; 
-        case 1: v2 += U8TO64_LE(key) * k4_U32; key += 8; v2= ROTR_64(v2,13) ^ t0;
-        case 0:                                          v3= ROTR_64(v3,19) ^ t1;
+    switch ( len >> 2 ) {
+        case 3: v0 += ((U64)U8TO32_LE(key) * k2_U32); key += 4; v0= ROTR_64(v0,31) ^ t3; 
+        case 2: v1 += ((U64)U8TO32_LE(key) * k3_U32); key += 4; v1= ROTR_64(v1,43) ^ t2; 
+        case 1: v2 += ((U64)U8TO32_LE(key) * k4_U32); key += 4; v2= ROTR_64(v2,17) ^ t0;
+        case 0:
         default: break;
     }
-    t0 = v0; t1 = v1; t2 = v2; t3= v3;
-    switch (len & 0x7) {
-        case 7: v0 += (U64)key[6]   * k2_U32; v0= ROTR_64(v0, 7) ^ t3;
-        case 6: v1 += (U64)key[5]   * k3_U32; v1= ROTR_64(v1,11) ^ t2; 
-        case 5: v2 += (U64)key[4]   * k4_U32; v2= ROTR_64(v2,13) ^ t0;
-        case 4: v3 += *((U32 *)key) * k5_U32; v3= ROTR_64(v3,19) ^ t1;
-                break;
-        case 3: v0 += (U64)key[2]   * k2_U32; v0= ROTR_64(v0, 7) ^ t3;
-        case 2: v1 += *((U16 *)key) * k5_U32; v1= ROTR_64(v1,11) ^ t2;
-                break;
-        case 1: v2 += (U64)key[0]   * k4_U32; v2= ROTR_64(v2,13) ^ t0;
-                break;
-        case 0:
-        default:v2 ^= 0xFF;
-                break;
+    switch (len & 0x3) {
+        case 3: v0 += (U64)key[2] * k2_U32; v0= ROTR_64(v0,31) ^ v3;
+        case 2: v1 += (U64)key[1] * k3_U32; v1= ROTR_64(v1,43) ^ v2;
+        case 1: v2 += (U64)key[0] * k4_U32; v2= ROTR_64(v2,17) ^ v0;
+        case 0: v3 += key_len     * k5_U32; v3= ROTR_64(v3,61) ^ v1;
+        default: break;
     }
 
+    v2 += v1;
     v1 -= v3;
-    v2 -= v1;
-    v0 = ROTR_64(v0,39);
-    v3 -= v0;
-    v1 = ROTR_64(v1,37) - v2;
-    v2 -= v0;
-    v3 = ROTL_64(v3,23) ^ v1;
-    
-    v0 = ROTL_64(v0,59) - v2;
-    v1 = ROTL_64(v1, 5) + v3;
-    v2 = ROTL_64(v2,53) ^ v1;
-    v3 = ROTR_64(v3,15) + v0;
-    v1 = ROTL_64(v1, 3) + v2;
-    v3 ^= v1;
-    
-    v2 = ROTL_64(v2,55);
-    v0 = ROTL_64(v0,53) ^ v2;
-    v1 = ROTL_64(v1,11) ^ v3;
-    v2 -= v1;
+    v1 = ROTL_64(v1, 1) ^ v2;
     v3 += v0;
-    
-    v0 = ROTL_64(v0,33) - v3;
-    v1 = ROTL_64(v1,47) - v2;
-    v2 = ROTL_64(v2, 9) ^ v0;
-    v3 = ROTR_64(v3,57) ^ v1;
-    
-    v0 = ROTR_64(v0,31) + v2;
-    v1 = ROTL_64(v1,23) + v3;
-    v2 = ROTL_64(v2,41);
-    v3 = ROTL_64(v3,32);
+    v0 += v1;
+    v0 = ROTR_64(v0,47);
+    v3 ^= v0;
+    v2 = ROTL_64(v2, 7);
+    v3 ^= v2;
+    v1 += v3;
+    v2 = ROTR_64(v2,47) + v1;
+    v2 = ROTL_64(v2, 7);
+    v3 ^= v2;
+    v1 += v3;
+    v2 = ROTR_64(v2,47) + v1;
+    v3 = ROTL_64(v3,53);
+    v1 -= v3;
+    v3 += v2;
+    v1 = ROTL_64(v1,25);
+    v3 ^= v1;
+    v3 = ROTL_64(v3,61);
+    v1 ^= v3;
+    v0 = ROTR_64(v0,55);
+    v1 -= v0;
+    v1 = ROTR_64(v1,48) ^ v2;
+    v1 += v3;
+    v0 -= v1;
+    v3 = ROTR_64(v3,32) ^ v1;
+    v1 = ROTR_64(v1,57);
+    v2 -= v3;
+    v2 = ROTR_64(v2,19);
+    v3 += v2;
+    v3 = ROTR_64(v3, 3);
 
     return v0 ^ v1 ^ v2 ^ v3;
 }
 
-BEAGLE_STATIC_INLINE U64 stadt64_hash(
+BEAGLE_STATIC_INLINE U64 stadt_hash(
     const U8 *seed_ch,
     const U8 *key,
     const STRLEN key_len
 ) {
-    U64 state[3];
-    stadt64_seed_state(seed_ch,(U8*)state);
-    return stadt64_hash_with_state((U8*)state,key,key_len);
+    U64 state[4];
+    stadt_seed_state(seed_ch,(U8*)state);
+    return stadt_hash_with_state((U8*)state,key,key_len);
 }
 
-void stadt64_seed_state_smhasher_test(int in_bits, const void *seed, void *state) {
-    stadt64_seed_state((U8*)seed,(U8*)state);
+void stadt_seed_state_smhasher_test(int in_bits, const void *seed, void *state) {
+    stadt_seed_state((U8*)seed,(U8*)state);
 }
 
-void stadt64_hash_with_state_smhasher_test(const void *key, STRLEN len, const void *state, void *out) {
-    *((U64 *)out)= stadt64_hash_with_state((U8*)state, (U8 *)key, len);
+void stadt_hash_with_state_smhasher_test(const void *key, STRLEN len, const void *state, void *out) {
+    *((U64 *)out)= stadt_hash_with_state((U8*)state, (U8 *)key, len);
 }
 
 #ifdef __cplusplus

@@ -83,8 +83,10 @@
 #define STMT_END while(0)
 #endif
 
+#define U8TOM64_LE(ptr)  (*((const __m64 *)(ptr)))
 #define U8TO64_LE(ptr)  (*((const U64 *)(ptr)))
 #define U8TO32_LE(ptr)  (*((const U32 *)(ptr)))
+#define U8TO16_LE(ptr)  (*((const U16 *)(ptr)))
 
 #ifdef __cplusplus
 extern "C" {
