@@ -87,12 +87,6 @@ BEAGLE_STATIC_INLINE U64 stadtx_hash_with_state(
         case 0: v3 += (U64)(len+1) * k5_U32;
                 break;
     }
-    if (0) {
-    v0= ROTL_64(v0,31) ^ v3;
-    v1= ROTR_64(v1,43) ^ v2;
-    v2= ROTL_64(v2,17) ^ v0;
-    v3= ROTR_64(v3,61) ^ v1;
-    }
     v2 += v1;
     v1 -= v3;
     v1 = ROTL_64(v1, 1) ^ v2;
