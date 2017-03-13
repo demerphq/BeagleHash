@@ -26,14 +26,18 @@ BEAGLE_STATIC_INLINE void stadtx_seed_state (
     state[1]= seed[1] ^ 0x49bd91d595cd41bdUL;
     state[2]= seed[0] ^ 0xbda10db5bd91b985UL;
     state[3]= seed[1] ^ 0xcd95d1e509b995cdUL;
+    state[4]= state[0] ^ seed[3];
     if (!state[0]) state[0]=1;
     if (!state[1]) state[1]=2;
     if (!state[2]) state[2]=4;
     if (!state[3]) state[3]=8;
+    if (!state[4]) state[4]=16;
     SCRAMBLE64(state[0],0x801178846e899d17UL);
     SCRAMBLE64(state[1],0x803340f36895c2b5UL);
     SCRAMBLE64(state[2],0xbea9344eb7565eebUL);
     SCRAMBLE64(state[3],0x9999791977e30c13UL);
+    SCRAMBLE64(state[3],0x9999791977e30c13UL);
+    SCRAMBLE64(state[4],0xe0218acee51f3775UL);
 }
 
 #define k0_U64 0xb89b0f8e1655514fUL
@@ -49,31 +53,28 @@ BEAGLE_STATIC_INLINE U64 stadtx_hash_with_state(
     const STRLEN key_len
 ) {
     U64 *state= (U64 *)state_ch;
-    U64 v0= state[0] ^ ((key_len+1) * k0_U64);
-    U64 v1= state[1] ^ ((key_len+2) * k1_U64);
-    U64 v2= state[2];
-    U64 v3= state[3];
+    U64 v0= state[0] ^ (key_len+1 * k0_U64);
+    U64 v1= state[1] ^ (key_len+2 * k0_U64);
+    U64 v2= state[2] ^ (key_len+3 * k1_U64);
+    U64 v3= state[3] ^ (key_len+4 * k1_U64);
     U64 len = key_len;
 
     while ( len >= 32 ) {
-        U64 t0= v0;
-        U64 t1= v1;
-        U64 t2= v2;
-        U64 t3= v3;
-        v0 += ((U64)U8TO64_LE(key+ 0) * k2_U32); v0= ROTL_64(v0,31) ^ t3;
-        v1 += ((U64)U8TO64_LE(key+ 8) * k3_U32); v1= ROTR_64(v1,43) ^ t2;
-        v2 += ((U64)U8TO64_LE(key+16) * k4_U32); v2= ROTL_64(v2,17) ^ t0;
-        v3 += ((U64)U8TO64_LE(key+24) * k5_U32); v3= ROTR_64(v3,61) ^ t1;
+        v0 += ((U64)U8TO64_LE(key+ 0) * k2_U32); v0= ROTR_64(v0, 7) ^ v3;
+        v1 += ((U64)U8TO64_LE(key+ 8) * k3_U32); v1= ROTL_64(v1,63) ^ v2;
+        v2 += ((U64)U8TO64_LE(key+16) * k4_U32); v2= ROTL_64(v2,17) + v0;
+        v3 += ((U64)U8TO64_LE(key+24) * k5_U32); v3= ROTL_64(v3,53) + v1;
         key += 32;
         len -= 32;
     }
-    switch ( len >> 3 ) {
-        case 3: v0 += ((U64)U8TO64_LE(key) * k2_U32); key += 8; v0= ROTL_64(v0,31) ^ v3; 
-        case 2: v1 += ((U64)U8TO64_LE(key) * k3_U32); key += 8; v1= ROTR_64(v1,43) ^ v2; 
-        case 1: v2 += ((U64)U8TO64_LE(key) * k4_U32); key += 8; v2= ROTL_64(v2,17) ^ v0;
-        case 0: break;
-    }
 
+    switch ( len >> 3 ) {
+        case 3: v0 += ((U64)U8TO64_LE(key) * k2_U32); key += 8; v0= ROTR_64(v0, 7) ^ v3; 
+        case 2: v1 += ((U64)U8TO64_LE(key) * k3_U32); key += 8; v1= ROTL_64(v1,63) ^ v2; 
+        case 1: v2 += ((U64)U8TO64_LE(key) * k4_U32); key += 8; v2= ROTL_64(v2,17) + v0;
+        case 0: v3 = ROTL_64(v3,53) + v1;
+    }
+    
     switch ( len & 0x7 ) {
         case 7: v0 += (U64)key[6] * k2_U32; 
         case 6: v1 += (U64)key[5] * k3_U32;
@@ -87,39 +88,32 @@ BEAGLE_STATIC_INLINE U64 stadtx_hash_with_state(
         case 0: v3 += (U64)(len+1) * k5_U32;
                 break;
     }
-    v2 += v1;
-    v1 -= v3;
-    v1 = ROTL_64(v1, 1) ^ v2;
-    v3 += v0;
-    v0 += v1;
-    v0 = ROTR_64(v0,47);
-    v3 ^= v0;
-    v2 = ROTL_64(v2, 7);
-    v3 ^= v2;
-    v1 += v3;
-    v2 = ROTR_64(v2,47) + v1;
-    v2 = ROTL_64(v2, 7);
-    v3 ^= v2;
-    v1 += v3;
-    v2 = ROTR_64(v2,47) + v1;
-    v3 = ROTL_64(v3,53);
-    v1 -= v3;
-    v3 += v2;
-    v1 = ROTL_64(v1,25);
-    v3 ^= v1;
-    v3 = ROTL_64(v3,61);
-    v1 ^= v3;
-    v0 = ROTR_64(v0,55);
-    v1 -= v0;
-    v1 = ROTR_64(v1,48) ^ v2;
+
     v1 += v3;
     v0 -= v1;
-    v3 = ROTR_64(v3,32) ^ v1;
-    v1 = ROTR_64(v1,57);
-    v2 -= v3;
-    v2 = ROTR_64(v2,19);
-    v3 += v2;
-    v3 = ROTR_64(v3, 3);
+    v1 = ROTL_64(v1,25) + v2;
+    v1 -= v0;
+    v2 = ROTR_64(v2,55) + v1;
+    v1 = ROTL_64(v1,49);
+    v2 -= v1;
+    v2 = ROTR_64(v2,29) ^ v1;
+    v0 -= v2;
+    v0 = ROTR_64(v0,55);
+    v2 += v0;
+    v3 ^= v2;
+    v1 = ROTL_64(v1,48);
+    v3 += v1;
+    v3 = ROTR_64(v3,33);
+    v0 -= v3;
+    v2 ^= v3;
+    v0 = ROTL_64(v0,37) ^ v2;
+    v3 += v0;
+    v3 = ROTR_64(v3,43) ^ v0;
+    v2 = ROTL_64(v2,17);
+    v3 -= v2;
+    v0 -= v3;
+    v3 = ROTR_64(v3,53);
+    v1 += v2;
 
     return v0 ^ v1 ^ v2 ^ v3;
 }
