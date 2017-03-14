@@ -111,7 +111,7 @@ extern "C" {
     /* now make the low bits be the inverse of the high bits that*/ \
     /* we can use from state[1] */                                  \
     state[1] = (state[1] << (128 - bits))                           \
-            | ((~state[1]) >> (32 - (128 - bits)));                 \
+            | (((~state[1]) >> (32 - (128 - bits))) & ((1UL << (128-bits))-1));                 \
     /* and then scramble the states */                              \
     SCRAMBLE64(state[0],0xb37337df3d56d90bUL);                      \
     SCRAMBLE64(state[1],0x819ffd05fcf65945UL);                      \
