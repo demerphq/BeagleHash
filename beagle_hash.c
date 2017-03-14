@@ -107,7 +107,7 @@ extern "C" {
     state[1]= 0;                                                    \
     /* safely copy the tail bits of the seed into the state */      \
     /* the +7 deals with the 127 case properly */                   \
-    memcpy(state+1,seed+1,(128-bits+7)/8);                          \
+    memcpy(state+1,seed+1,((bits-64)+7)/8);                         \
     /* now make the low bits be the inverse of the high bits that*/ \
     /* we can use from state[1] */                                  \
     state[1] = (state[1] << (128 - bits))                           \
