@@ -4,6 +4,7 @@ extern "C" {
 
 #include "beagle_hash.h"
 #include <stdio.h>
+#include <string.h>
 
 #define k0_U64 0xE48467F78A53154FULL
 #define k1_U64 0x932CF3531C75ABE9ULL
@@ -99,12 +100,22 @@ extern "C" {
 
 
 #define BEAGLE_MUNGE_SEED(seed,state,bits) STMT_START {             \
+    /* make sure the seed[0]=0 case does not look like 0 */         \
     state[0] = seed[0] ^ 0x933a4a3f54ba4bafUL;                      \
-    state[1] = (seed[1] << (128 - bits))                            \
-            | ((~seed[1]) >> (64 -(128-bits)));                     \
+    /* and then make sure that if we hit the 0 we turn into 1 */    \
     if (!state[0]) state[0]=1;                                      \
+    state[1]= 0;                                                    \
+    /* safely copy the tail bits of the seed into the state */      \
+    /* the +7 deals with the 127 case properly */                   \
+    memcpy(state+1,seed+1,(128-bits+7)/8);                          \
+    /* now make the low bits be the inverse of the high bits that*/ \
+    /* we can use from state[1] */                                  \
+    state[1] = (state[1] << (128 - bits))                           \
+            | ((~state[1]) >> (32 - (128 - bits)));                 \
+    /* and then scramble the states */                              \
     SCRAMBLE64(state[0],0xb37337df3d56d90bUL);                      \
     SCRAMBLE64(state[1],0x819ffd05fcf65945UL);                      \
+    /* and mix them too for good measure */                         \
     BEAGLE_FINALIZE(state[0],state[1]);                             \
 } STMT_END
 
