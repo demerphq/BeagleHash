@@ -3,8 +3,13 @@ extern "C" {
 #endif
 
 #include <stdlib.h>
+#include <stdio.h>
 #include "beagle_hash.h"
 #include "stadtx_hash.h"
+#include "phat_hash.h"
+#include "sbox_hash.h"
+#include "zaphod32_hash.h"
+#include "zaphod64_hash.h"
 
 void beagle_hash_with_state_32_128_a_smhasher(const void *key, STRLEN len, const void *state, void *out) {
     *((U32 *)out)= beagle_hash_with_state_32_128_a((U8*)state, (U8 *)key, len);
@@ -46,6 +51,38 @@ void stadtx_hash_with_state_smhasher_test(const void *key, STRLEN len, const voi
     *((U64 *)out)= stadtx_hash_with_state((U8*)state, (U8 *)key, len);
 }
 
+void zaphod32_seed_state_smhasher_test(int in_bits, const void *seed, void *state) {
+    zaphod32_seed_state((U8*)seed,(U8*)state);
+}
+
+void zaphod32_hash_with_state_smhasher_test(const void *key, STRLEN len, const void *seed, void *out) {
+    *((U32 *)out)= zaphod32_hash_with_state((U8*)seed, (U8 *)key, len);
+}
+
+void zaphod64_seed_state_smhasher_test(int in_bits, const void *seed, void *state) {
+    zaphod64_seed_state((U8*)seed,(U8*)state);
+}
+
+void zaphod64_hash_with_state_smhasher_test(const void *key, STRLEN len, const void *state, void *out) {
+    *((U64 *)out)= zaphod64_hash_with_state((U8*)state, (U8 *)key, len);
+}
+
+void sbox_seed_state_smhasher_test(int in_bits, const void *seed, void *state) {
+    sbox_seed_state((U8*)seed,(U8*)state);
+}
+
+void sbox_hash_with_state_smhasher_test(const void *key, STRLEN len, const void *state, void *out) {
+    *((U64 *)out)= sbox_hash_with_state((U8*)state, (U8 *)key, len);
+}
+
+void phat_hash_smhasher_test(const void *key, STRLEN len, U32 seed_base, void *out) {
+    U32 seed[3]= { seed_base, 0, 0 };
+    *((U32 *)out)= phat_hash((U8*)seed, (U8 *)key, len);
+}
+
+void phat_hash_with_state_smhasher_test(const void *key, STRLEN len, const void *seed, void *out) {
+    *((U32 *)out)= phat_hash((U8*)seed, (U8 *)key, len);
+}
 
 #ifdef __cplusplus
 }
