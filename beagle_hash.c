@@ -194,7 +194,7 @@ BEAGLE_STATIC_INLINE U32 beagle_hash_with_state_32_128_a(
 
     u.u64.v0= beagle_hash_with_state_64_128_a(seed_ch,key,key_len);
 
-    return u.u32.v0 ^ u.u32.v1;
+    return u.u32.v1;
 }
 
 
