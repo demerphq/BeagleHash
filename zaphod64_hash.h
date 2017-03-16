@@ -69,15 +69,49 @@
 #define STMT_END while(0)
 #endif
 
-#ifndef U8TO64_LE
-#define U8TO64_LE(ptr)  (*((const U64 *)(ptr)))
+#ifndef ZAPHOD64_UNALIGNED_AND_LITTLE_ENDIAN
+#define ZAPHOD64_UNALIGNED_AND_LITTLE_ENDIAN 1
 #endif
-#ifndef U8TO32_LE
-#define U8TO32_LE(ptr)  (*((const U32 *)(ptr)))
+
+#if ZAPHOD64_ALLOW_UNALIGNED_AND_LITTLE_ENDIAN
+  #ifndef U8TO64_LE
+    #define U8TO64_LE(ptr)  (*((const U64 *)(ptr)))
+  #endif
+  #ifndef U8TO32_LE
+    #define U8TO32_LE(ptr)  (*((const U32 *)(ptr)))
+  #endif
+  #ifndef U8TO16_LE
+    #define U8TO16_LE(ptr)  (*((const U16 *)(ptr)))
+  #endif
+#else
+  #ifndef U8TO64_LE
+    #define U8TO64_LE(ptr)  (\
+        (U64)(ptr)[7] << 56 | \
+        (U64)(ptr)[6] << 48 | \
+        (U64)(ptr)[5] << 40 | \
+        (U64)(ptr)[4] << 32 | \
+        (U64)(ptr)[3] << 24 | \
+        (U64)(ptr)[2] << 16 | \
+        (U64)(ptr)[1] << 8  | \
+        (U64)(ptr)[0]         \
+    )
+  #endif
+  #ifndef U8TO32_LE
+    #define U8TO32_LE(ptr)  (\
+        (U32)(ptr)[3] << 24 | \
+        (U32)(ptr)[2] << 16 | \
+        (U32)(ptr)[1] << 8  | \
+        (U32)(ptr)[0]         \
+    )
+  #endif
+  #ifndef U8TO16_LE
+    #define U8TO16_LE(ptr)  (\
+        (U16)(ptr)[1] << 8  | \
+        (U16)(ptr)[0]         \
+    )
+  #endif
 #endif
-#ifndef U8TO16_LE
-#define U8TO16_LE(ptr)  (*((const U16 *)(ptr)))
-#endif
+
 #define ZAPHOD64_SCRAMBLE64(v,prime) STMT_START {  \
     v ^= (v>>13);                        \
     v ^= (v<<35);                       \
@@ -142,22 +176,23 @@ ZAPHOD64_STATIC_INLINE void zaphod64_seed_state (
 ) {
     U64 *seed= (U64 *)seed_ch;
     U64 *state= (U64 *)state_ch;
-    state[0]= seed[0];
-    state[1]= seed[1];
-    state[2]= seed[2] << 1; /* lose the high bits of the seed - little endian */
-    state[2] |= ((~seed[2]) & 0x01); /* and add in the reverse of the low bits */
-    /* at this point we are guaranteed that seed[2] has at least one 0-bit,
-     * and one 1-bit. Which means the overall seed does too. */
-    if (0) {
-        /* then mix the shift out of them */
-        ZAPHOD64_MIX(state[0],state[1],state[2],"SEED-STATE 1/4");
-        ZAPHOD64_SCRAMBLE64(state[0],0x801178846e899d17UL);
-        ZAPHOD64_MIX(state[0],state[1],state[2],"SEED-STATE 2/4");
-        ZAPHOD64_SCRAMBLE64(state[1],0x803340f36895c2b5UL);
-        ZAPHOD64_MIX(state[0],state[1],state[2],"SEED-STATE 3/4");
-        ZAPHOD64_SCRAMBLE64(state[2],0x80445170f5f2e0b1UL);
-        ZAPHOD64_MIX(state[0],state[1],state[2],"SEED-STATE 4/4");
-    }
+    /* hex expansion of pi, skipping first two digits. pi= 3.2[43f6...]*/
+    /* pi value in hex from here:
+     * http://turner.faculty.swau.edu/mathematics/materialslibrary/pi/pibases.html*/
+    state[0]= seed[0] ^ 0x43f6a8885a308d31UL;
+    state[1]= seed[1] ^ 0x3198a2e03707344aUL;
+    state[2]= seed[0] ^ 0x4093822299f31d00UL;
+    if (!state[0]) state[0] = 1;
+    if (!state[1]) state[1] = 2;
+    if (!state[2]) state[2] = 4;
+
+    ZAPHOD64_SCRAMBLE64(state[0],0x801178846e899d17UL);
+    ZAPHOD64_SCRAMBLE64(state[1],0x803340f36895c2b5UL);
+    ZAPHOD64_SCRAMBLE64(state[2],0x80445170f5f2e0b1UL);
+    ZAPHOD64_SCRAMBLE64(state[0],0x9c1b8e1e9628323fUL);
+    ZAPHOD64_SCRAMBLE64(state[1],0xa52a78f6dea653c1UL);
+    ZAPHOD64_SCRAMBLE64(state[2],0xd0959cc6bf8d866dUL);
+
     ZAPHOD64_WARN3("v0=%016lx v1=%016lx v2=%016lx - ZAPHOD64 SEED-STATE FINAL\n",
             (unsigned long)state[0], (unsigned long)state[1], (unsigned long)state[2]);
 }

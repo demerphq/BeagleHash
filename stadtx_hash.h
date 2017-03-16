@@ -120,9 +120,6 @@ STADTX_STATIC_INLINE void stadtx_seed_state (
 ) {
     U64 *seed= (U64 *)seed_ch;
     U64 *state= (U64 *)state_ch;
-    /* hex expansion of pi, skipping first two digits. pi= 3.2[43f6...]*/
-    /* pi value in hex from here:
-     * http://turner.faculty.swau.edu/mathematics/materialslibrary/pi/pibases.html*/
     /* first we apply two masks to each word of the seed, this means that
      * a) at least one of state[0] and state[2] is nonzero,
      * b) at least one of state[1] and state[3] is nonzero
@@ -131,6 +128,9 @@ STADTX_STATIC_INLINE void stadtx_seed_state (
      * e) that the replacement value for any zero's is a totally different from the seed value.
      *    (iow, if seed[0] is 0x43f6a8885a308d31UL then state[0] becomes 0, which is the replaced
      *    with 1, which is totally different.). */
+    /* hex expansion of pi, skipping first two digits. pi= 3.2[43f6...]*/
+    /* pi value in hex from here:
+     * http://turner.faculty.swau.edu/mathematics/materialslibrary/pi/pibases.html*/
     state[0]= seed[0] ^ 0x43f6a8885a308d31UL;
     state[1]= seed[1] ^ 0x3198a2e03707344aUL;
     state[2]= seed[0] ^ 0x4093822299f31d00UL;

@@ -26,11 +26,11 @@
 #define ZAPHOD32_WARN2(pat,v0,v1)
 #endif
 
-#ifndef ROTL64
+#ifndef ROTL32
 #define _ROTL_SIZED(x,r,s) ( ((x) << (r)) | ((x) >> ((s) - (r))) )
 #define _ROTR_SIZED(x,r,s) ( ((x) << ((s) - (r))) | ((x) >> (r)) )
-#define ROTL64(x,r) _ROTL_SIZED(x,r,64)
-#define ROTR64(x,r) _ROTR_SIZED(x,r,64)
+#define ROTL32(x,r) _ROTL_SIZED(x,r,32)
+#define ROTR32(x,r) _ROTR_SIZED(x,r,32)
 #endif
 
 #ifndef PERL_SEEN_HV_FUNC_H
@@ -78,6 +78,7 @@
 #ifndef U8TO16_LE
 #define U8TO16_LE(ptr)  (*((const U16 *)(ptr)))
 #endif
+
 #define ZAPHOD_SCRAMBLE32(v,prime) STMT_START {  \
     v ^= (v>>9);                        \
     v ^= (v<<21);                       \
