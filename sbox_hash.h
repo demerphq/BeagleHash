@@ -148,7 +148,7 @@ SBOX_STATIC_INLINE void sbox_seed_state (
     U64 s0= seed[0];
     U64 s1= seed[1];
 
-    int i,j,count;
+    int i,j;
     if ( s0 + s1 == 0 )
         s0 = 1;
     for( i = 0 ; i < 32 ; i++ ) {
@@ -159,14 +159,12 @@ SBOX_STATIC_INLINE void sbox_seed_state (
             SBOX_XORSHIFT128plus(s0,s1);
             *state = s0 + s1;
             state++;
-            count++;
         }
     }
     for ( i = 0; i < 3; i++ ) {
         SBOX_XORSHIFT128plus(s0,s1);
         *state = s0 + s1;
         state++;
-        count++;
     }
 }
 
