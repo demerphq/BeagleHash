@@ -14,6 +14,7 @@
 #endif
 
 #ifndef PERL_SEEN_HV_FUNC_H
+
 #if !defined(U64)
     #include <stdint.h>
     #define U64 uint64_t
@@ -49,14 +50,47 @@
 #define STMT_END while(0)
 #endif
 
-#ifndef U8TO64_LE
-#define U8TO64_LE(ptr)  (*((const U64 *)(ptr)))
+#ifndef STADTX_UNALIGNED_AND_LITTLE_ENDIAN
+#define STADTX_UNALIGNED_AND_LITTLE_ENDIAN 1
 #endif
-#ifndef U8TO32_LE
-#define U8TO32_LE(ptr)  (*((const U32 *)(ptr)))
-#endif
-#ifndef U8TO16_LE
-#define U8TO16_LE(ptr)  (*((const U16 *)(ptr)))
+
+#if STADTX_ALLOW_UNALIGNED_AND_LITTLE_ENDIAN
+  #ifndef U8TO64_LE
+    #define U8TO64_LE(ptr)  (*((const U64 *)(ptr)))
+  #endif
+  #ifndef U8TO32_LE
+    #define U8TO32_LE(ptr)  (*((const U32 *)(ptr)))
+  #endif
+  #ifndef U8TO16_LE
+    #define U8TO16_LE(ptr)  (*((const U16 *)(ptr)))
+  #endif
+#else
+  #ifndef U8TO64_LE
+    #define U8TO64_LE(ptr)  (\
+        (U64)(ptr)[7] << 56 | \
+        (U64)(ptr)[6] << 48 | \
+        (U64)(ptr)[5] << 40 | \
+        (U64)(ptr)[4] << 32 | \
+        (U64)(ptr)[3] << 24 | \
+        (U64)(ptr)[2] << 16 | \
+        (U64)(ptr)[1] << 8  | \
+        (U64)(ptr)[0]         \
+    )
+  #endif
+  #ifndef U8TO32_LE
+    #define U8TO32_LE(ptr)  (\
+        (U32)(ptr)[3] << 24 | \
+        (U32)(ptr)[2] << 16 | \
+        (U32)(ptr)[1] << 8  | \
+        (U32)(ptr)[0]         \
+    )
+  #endif
+  #ifndef U8TO16_LE
+    #define U8TO16_LE(ptr)  (\
+        (U16)(ptr)[1] << 8  | \
+        (U16)(ptr)[0]         \
+    )
+  #endif
 #endif
 
 /* do a marsaglia xor-shift permutation followed by a

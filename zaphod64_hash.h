@@ -216,12 +216,14 @@ ZAPHOD64_STATIC_INLINE U64 zaphod64_hash_with_state(
         uint64_t vy = 0;
         switch (len & 0x7) {
             case 7: vx += (U64)key[6] << 48;
-            case 6: vx += (U64)key[5] << 40;
+            case 6: vx += (U64)U8TO16_LE(key+4) << 32;
+                    vx += (U64)U8TO32_LE(key);
+                    break;
             case 5: vx += (U64)key[4] << 32;
-            case 4: vx += *((U32 *)key);
+            case 4: vx += (U64)U8TO32_LE(key);
                     break;
             case 3: vx += (U64)key[2] << 16;
-            case 2: vx += *((U16 *)key);
+            case 2: vx += U8TO16_LE(key);
                     break;
             case 1: vx += (U64)key[0];
                     break;
@@ -235,12 +237,14 @@ ZAPHOD64_STATIC_INLINE U64 zaphod64_hash_with_state(
     v0 += ((U64)(key_len+1) << 56);
     switch (len & 0x7) {
         case 7: v0 += (U64)key[6] << 48;
-        case 6: v0 += (U64)key[5] << 40;
+        case 6: v0 += (U64)U8TO16_LE(key+4) << 32;
+                v0 += (U64)U8TO32_LE(key);
+                break;
         case 5: v0 += (U64)key[4] << 32;
-        case 4: v0 += *((U32 *)key);
+        case 4: v0 += (U64)U8TO32_LE(key);
                 break;
         case 3: v0 += (U64)key[2] << 16;
-        case 2: v0 += *((U16 *)key);
+        case 2: v0 += (U64)U8TO16_LE(key);
                 break;
         case 1: v0 += (U64)key[0];
                 break;
