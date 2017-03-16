@@ -90,7 +90,7 @@
 } STMT_END
 
 #define ZAPHOD32_FINALIZE(v0,v1,v2) STMT_START {          \
-    ZAPHOD32_WARN3("v0=%08x v1=%08x v2=%08x - ZAPHOD FINALIZE\n", \
+    ZAPHOD32_WARN3("v0=%08x v1=%08x v2=%08x - ZAPHOD32 FINALIZE\n", \
             (unsigned int)v0, (unsigned int)v1, (unsigned int)v2);  \
     v2 += v0;                       \
     v1 -= v2;                       \
@@ -116,7 +116,7 @@
 } STMT_END
 
 #define ZAPHOD32_MIX(v0,v1,v2,text) STMT_START {                              \
-    ZAPHOD32_WARN4("v0=%08x v1=%08x v2=%08x - ZAPHOD %s MIX\n",                   \
+    ZAPHOD32_WARN4("v0=%08x v1=%08x v2=%08x - ZAPHOD32 %s MIX\n",                   \
             (unsigned int)v0,(unsigned int)v1,(unsigned int)v2, text );  \
     v0 = ROTL32(v0,16) - v2;   \
     v1 = ROTR32(v1,13) ^ v2;   \
@@ -144,12 +144,12 @@ void zaphod32_seed_state (
     ZAPHOD32_MIX(state[0],state[1],state[2],"SEED-STATE 2/3");
     ZAPHOD32_MIX(state[0],state[1],state[2],"SEED-STATE 3/3");
     /* and then scramble them too for good measure */
-    ZAPHOD32_WARN3("v0=%08x v1=%08x v2=%08x - ZAPHOD SEED-STATE SCRAMBLE\n",
+    ZAPHOD32_WARN3("v0=%08x v1=%08x v2=%08x - ZAPHOD32 SEED-STATE SCRAMBLE\n",
             (unsigned int)state[0], (unsigned int)state[1], (unsigned int)state[2]);
     ZAPHOD_SCRAMBLE32(state[0],0x9BD7E6C1UL);
     ZAPHOD_SCRAMBLE32(state[1],0x8019E4BBUL);
     ZAPHOD_SCRAMBLE32(state[2],0xE2607E49UL);
-    ZAPHOD32_WARN3("v0=%08x v1=%08x v2=%08x - ZAPHOD SEED-STATE FINAL\n",
+    ZAPHOD32_WARN3("v0=%08x v1=%08x v2=%08x - ZAPHOD32 SEED-STATE FINAL\n",
             (unsigned int)state[0], (unsigned int)state[1], (unsigned int)state[2]);
 }
 
