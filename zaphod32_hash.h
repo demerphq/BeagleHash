@@ -165,70 +165,37 @@ ZAPHOD32_STATIC_INLINE U32 zaphod32_hash_with_state(
     U32 hash;
 
     ZAPHOD32_WARN4("v0=%08x v1=%08x v2=%08x ln=%08x HASH START\n",
-            (unsigned int)state[0], (unsigned int)state[1], (unsigned int)state[2], (unsigned int)key_len);
-    switch (key_len) {
-        case 8: v1 -= ((U32)key[7]) << 24;
-        case 7: v0 += ((U32)key[6]) << 24;
-        case 6: v1 -= ((U32)key[5]) << 16;
-        case 5: v0 += ((U32)key[4]) << 16;
-        case 4: v1 -= ((U32)key[3]) << 8;
-        case 3: v0 += ((U32)key[2]) << 8;
-        case 2: v1 -= ((U32)key[1]) << 0;
-        case 1: v0 += ((U32)key[0]) << 0;
-        case 0: break;
-        case 15: /* fallthrough */
-        case 14: /* fallthrough */
-        case 13: /* fallthrough */
-        case 12: goto zaphod32_read3;
-        case 11: /* fallthrough */
-        case 10:
-        case  9: goto zaphod32_read2;
-        default:{
-            do {
-                v1 -= U8TO32_LE(key); key += 4;
-                v0 += U8TO32_LE(key); key += 4;
-                ZAPHOD32_MIX(v0,v1,v2,"MIX 2-WORDS A");
-                v1 -= U8TO32_LE(key); key += 4;
-                v0 += U8TO32_LE(key); key += 4;
-                ZAPHOD32_MIX(v0,v1,v2,"MIX 2-WORDS B");
-                len -= 16;
-            } while ( len >= 16 );
-            switch ( len >> 2 ) {
-                case 3:
-                zaphod32_read3:
-                        v1 -= U8TO32_LE(key); key += 4;
-                        v0 += U8TO32_LE(key); key += 4;
-                        ZAPHOD32_MIX(v0,v1,v2,"MIX 2-WORDS C");
-                case 1:
-                        v1 -= U8TO32_LE(key); key += 4;
-                        break;
-                case 2:
-                zaphod32_read2:
-                        v1 -= U8TO32_LE(key); key += 4;
-                        v0 += U8TO32_LE(key); key += 4;
-                        ZAPHOD32_MIX(v0,v1,v2,"MIX 2-WORDS D");
-                        break;
-                case 0:
-                default: break;
-            }
-            v0 += ((key_len+1) << 24);
-            switch (len & 0x3) {
-                case 3: v0 += (U32)key[2] << 16;
-                case 2: v0 += (U32)key[1] <<  8;
-                case 1: v0 += (U32)key[0];
-                        break;
-                case 0:
-                default:v2 ^= 0xFF;
-                        break;
-            }
-        }
+            (unsigned int)state[0], (unsigned int)state[1],
+            (unsigned int)state[2], (unsigned int)key_len);
+
+    while ( len >= 8 ){
+        v1 -= U8TO32_LE(key); key += 4;
+        v0 += U8TO32_LE(key); key += 4;
+        ZAPHOD32_MIX(v0,v1,v2,"MIX 2-WORDS A");
+        len -= 8;
     }
+
+    if (len >= 4 ) {
+        v1 -= U8TO32_LE(key); key += 4;
+    }
+
+    v0 += (U32)(len+1) << 24;
+    switch (len & 0x3) {
+        case 3: v0 += (U32)key[2] << 16;
+        case 2: v0 += (U32)U8TO16_LE(key);
+                break;
+        case 1: v0 += (U32)key[0];
+                break;
+        case 0: v2 ^= 0xFF;
+    }
+
     ZAPHOD32_FINALIZE(v0,v1,v2);
     hash = v0 ^ v1 ^ v2;
 
     ZAPHOD32_WARN4("v0=%08x v1=%08x v2=%08x hh=%08x - FINAL\n\n",
             (unsigned int)v0, (unsigned int)v1, (unsigned int)v2,
             (unsigned int)hash);
+
     return hash;
 }
 
