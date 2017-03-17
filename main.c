@@ -25,16 +25,30 @@ void print32(const char *str, const void *b, int num) {
     printf(" }\n");
 }
 
+/*---*/
+
 char *test_string = "The shaved yak drank from the bitter well";
 STRLEN test_string_len;
 const U64 seed[3] = { 0x1234567890123456UL, 0x9876543210ABCDEF, 0xABCDEF0123456789 };
 
-const U64 stadtx_state_expected[4] = { 0x0d42d19b274a6366, 0x7cdddde71be117f0, 0x1f4db39c60100ad2, 0xd430c8ca8ac732eb };
+/*---*/
+
+const U64 stadtx_state_expected[4] = 
+    { 0x0d42d19b274a6366, 0x7cdddde71be117f0, 0x1f4db39c60100ad2, 0xd430c8ca8ac732eb };
 const U64 stadtx_hash_expected = 0x5f7aa2a6f52125cdUl;
-const U32 zaphod32_hash_expected = 0x8247da16;
-const U32 zaphod32_state_expected[3] = { 0x2c2395a1, 0x05820670, 0x3fb4c1f7 };
-const U64 zaphod64_hash_expected = 0xb1085ad71777a135;
-const U64 zaphod64_state_expected[3] = { 0x7348467c9465b05a, 0xd3d08bc39fb12b4e, 0xc7f77fbd0e4a525f };
+
+/*---*/
+
+const U32 zaphod32_state_expected[3] = { 0xdaa1089c, 0xae1b8e20, 0x8dfb952e };
+const U32 zaphod32_hash_expected = 0xc6f3412c;
+
+/*---*/
+
+const U64 zaphod64_state_expected[3] = 
+    { 0x7348467c9465b05a, 0xd3d08bc39fb12b4e, 0x67a0860b5474f3c7 };
+const U64 zaphod64_hash_expected = 0xbe93e83446aeefd4;
+
+/*---*/
 
 int main(int argc, char **argv) {
     U64 state[4];
@@ -46,10 +60,11 @@ int main(int argc, char **argv) {
 
     stadtx_seed_state((U8*)seed,(U8*)state);
     failed = memcmp(stadtx_state_expected, state, 4 * sizeof(U64))!=0;
-    if (failed) {
+    if (failed)
         printf("#Failed test 1:\n");
-        print64(" seed:", seed, 2);
-        print64("state:", state, 4);
+    print64(" seed:", seed, 2);
+    print64("state:", state, 4);
+    if (failed) {
         print64(" want:", stadtx_state_expected, 4);
         printf("not ");
     }
@@ -57,19 +72,21 @@ int main(int argc, char **argv) {
 
     a64= stadtx_hash_with_state((U8*)state,test_string,test_string_len);
     failed = a64 != stadtx_hash_expected;
-    if (failed){
+    if (failed)
         printf("#Failed test 2:\n");
-        printf("#got : 0x%016lx\n#want: 0x%016lx\n", a64, stadtx_hash_expected);
+    printf("#got : 0x%016lx\n#want: 0x%016lx\n", a64, stadtx_hash_expected);
+    if (failed)
         printf("not ");
-    }
+
     printf("ok 2 - stadtx hash test string hash\n");
 
     zaphod32_seed_state((U8*)seed,(U8*)state);
     failed = memcmp(zaphod32_state_expected, state, 3 * sizeof(U32))!=0;
-    if (failed) {
+    if (failed)
         printf("#Failed test 3:\n");
-        print32(" seed:", seed, 3);
-        print32("state:", state, 3);
+    print32(" seed:", seed, 3);
+    print32("state:", state, 3);
+    if (failed) {
         print32(" want:", zaphod32_state_expected, 3);
         printf("not ");
     }
@@ -77,19 +94,21 @@ int main(int argc, char **argv) {
     
     a32= zaphod32_hash_with_state((U8*)state,test_string,test_string_len);
     failed = a32 != zaphod32_hash_expected;
-    if (failed) {
+    if (failed)
         printf("#Failed test 4:\n");
-        printf("#got : 0x%08x\n#want: 0x%08x\n", a32, zaphod32_hash_expected);
+
+    printf("#got : 0x%08x\n#want: 0x%08x\n", a32, zaphod32_hash_expected);
+    if (failed)
         printf("not ");
-    }
     printf("ok 4 - zaphod32 hash test string hash\n");
     
     zaphod64_seed_state((U8*)seed,(U8*)state);
     failed = memcmp(zaphod64_state_expected, state, 3 * sizeof(U64))!=0;
-    if (failed) {
+    if (failed)
         printf("#Failed test 5:\n");
-        print64(" seed:", seed, 3);
-        print64("state:", state, 3);
+    print64(" seed:", seed, 3);
+    print64("state:", state, 3);
+    if (failed) {
         print64(" want:", zaphod64_state_expected, 3);
         printf("not ");
     }
@@ -97,11 +116,11 @@ int main(int argc, char **argv) {
     
     a64= zaphod64_hash_with_state((U8*)state,test_string,test_string_len);
     failed = a64 != zaphod64_hash_expected;
-    if (failed) {
+    if (failed)
         printf("#Failed test 6:\n");
-        printf("#got : 0x%016lx\n#want: 0x%016lx\n", a64, zaphod64_hash_expected);
+    printf("#got : 0x%016lx\n#want: 0x%016lx\n", a64, zaphod64_hash_expected);
+    if (failed)
         printf("not ");
-    }
     printf("ok 6 - zaphod64 hash test string hash\n");
 
 }

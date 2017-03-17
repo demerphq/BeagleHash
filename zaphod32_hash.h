@@ -79,7 +79,10 @@
 #define U8TO16_LE(ptr)  (*((const U16 *)(ptr)))
 #endif
 
-#define ZAPHOD_SCRAMBLE32(v,prime) STMT_START {  \
+/* This is two marsaglia xor-shift permutes, with a prime-multiple
+ * sandwiched inside. The end result of doing this twice with different
+ * primes is a completely avalanched v.  */
+#define ZAPHOD32_SCRAMBLE32(v,prime) STMT_START {  \
     v ^= (v>>9);                        \
     v ^= (v<<21);                       \
     v ^= (v>>16);                       \
@@ -133,24 +136,26 @@ void zaphod32_seed_state (
 ) {
     U32 *seed= (U32 *)seed_ch;
     U32 *state= (U32 *)state_ch;
-    state[0]= seed[0];
-    state[1]= seed[1];
-    state[2]= seed[2] << 1; /* lose the high bit of the seed - little endian */
-    state[2] |= ((~seed[2]) & 0x01); /* and add in the reverse of the low bit */
-    /* at this point we are guaranteed that seed[2] has at least one 0-bit,
-     * and at least one 1-bit. Which means the overall seed does too. */
-    /* then mix the shift out of them */
-    ZAPHOD32_MIX(state[0],state[1],state[2],"SEED-STATE 1/3");
-    ZAPHOD32_MIX(state[0],state[1],state[2],"SEED-STATE 2/3");
-    ZAPHOD32_MIX(state[0],state[1],state[2],"SEED-STATE 3/3");
-    /* and then scramble them too for good measure */
-    ZAPHOD32_WARN3("v0=%08x v1=%08x v2=%08x - ZAPHOD32 SEED-STATE SCRAMBLE\n",
-            (unsigned int)state[0], (unsigned int)state[1], (unsigned int)state[2]);
-    ZAPHOD_SCRAMBLE32(state[0],0x9BD7E6C1UL);
-    ZAPHOD_SCRAMBLE32(state[1],0x8019E4BBUL);
-    ZAPHOD_SCRAMBLE32(state[2],0xE2607E49UL);
-    ZAPHOD32_WARN3("v0=%08x v1=%08x v2=%08x - ZAPHOD32 SEED-STATE FINAL\n",
-            (unsigned int)state[0], (unsigned int)state[1], (unsigned int)state[2]);
+    /* hex expansion of pi, skipping first two digits. pi= 3.2[43f6...]*/
+    /* pi value in hex from here:
+     * http://turner.faculty.swau.edu/mathematics/materialslibrary/pi/pibases.html*/
+    /* Ensure that the three state vectors are nonzero regardless of the seed. */
+    /* The idea of these two steps is to ensure that the 0 state comes from a seed
+     * utterly unlike that of the value we replace it with.*/
+    state[0]= seed[0] ^ 0x43f6a888;
+    state[1]= seed[1] ^ 0x5a308d31;
+    state[2]= seed[2] ^ 0x3198a2e0;
+    if (!state[0]) state[0] = 1;
+    if (!state[1]) state[1] = 2;
+    if (!state[2]) state[2] = 4;
+    /* these are pseduo-randomly selected primes between 2**31 and 2**32
+     * (I generated a big list and then randomly chose some from the list) */
+    ZAPHOD32_SCRAMBLE32(state[0],0x9fade23b);
+    ZAPHOD32_SCRAMBLE32(state[0],0x8497242b);
+    ZAPHOD32_SCRAMBLE32(state[1],0xaa6f908d);
+    ZAPHOD32_SCRAMBLE32(state[1],0xc95d22a9);
+    ZAPHOD32_SCRAMBLE32(state[2],0x9c5cc4e9);
+    ZAPHOD32_SCRAMBLE32(state[2],0xcdf6b72d);
 }
 
 ZAPHOD32_STATIC_INLINE U32 zaphod32_hash_with_state(
@@ -160,8 +165,8 @@ ZAPHOD32_STATIC_INLINE U32 zaphod32_hash_with_state(
 ) {
     U32 *state= (U32 *)state_ch;
     U32 v0= state[0];
-    U32 v1= state[1];
-    U32 v2= state[2] ^ (0xC41A7AB1UL * (key_len + 1));
+    U32 v1= state[1] ^ (0x88ac0411 * (key_len + 2));
+    U32 v2= state[2] ^ (0xC41A7AB1 * (key_len + 1));
     U32 len= key_len;
     U32 hash;
 

@@ -181,11 +181,12 @@ ZAPHOD64_STATIC_INLINE void zaphod64_seed_state (
      * http://turner.faculty.swau.edu/mathematics/materialslibrary/pi/pibases.html*/
     state[0]= seed[0] ^ 0x43f6a8885a308d31UL;
     state[1]= seed[1] ^ 0x3198a2e03707344aUL;
-    state[2]= seed[0] ^ 0x4093822299f31d00UL;
+    state[2]= seed[2] ^ 0x4093822299f31d00UL;
     if (!state[0]) state[0] = 1;
     if (!state[1]) state[1] = 2;
     if (!state[2]) state[2] = 4;
-
+    /* these are pseduo-randomly selected primes between 2**63 and 2**64
+     * (I generated a big list and then randomly chose some from the list) */
     ZAPHOD64_SCRAMBLE64(state[0],0x801178846e899d17UL);
     ZAPHOD64_SCRAMBLE64(state[1],0x803340f36895c2b5UL);
     ZAPHOD64_SCRAMBLE64(state[2],0x80445170f5f2e0b1UL);
