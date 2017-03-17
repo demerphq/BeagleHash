@@ -213,61 +213,18 @@ ZAPHOD64_STATIC_INLINE U64 zaphod64_hash_with_state(
     ZAPHOD64_WARN4("v0=%016lx v1=%016lx v2=%016lx ln=%016lx - ZAPHOD64 HASH START\n",
             (unsigned long)state[0], (unsigned long)state[1],
             (unsigned long)state[2], (unsigned long)key_len);
-    while ( len >= 32 ) {
+
+    while ( len >= 16 ) {
         ZAPHOD64_WARN2("m0=%016lx m1=%016lx - ZAPHOD64 READ 2-WORDS A\n",
             U8TO64_LE(key),U8TO64_LE(key+8));
         v1 -= U8TO64_LE(key); key += 8;
         v0 += U8TO64_LE(key); key += 8;
         ZAPHOD64_MIX(v0,v1,v2,"MIX 2-WORDS A");
-        ZAPHOD64_WARN2("m0=%016lx m1=%016lx - ZAPHOD64 READ 2-WORDS B\n",
-            U8TO64_LE(key),U8TO64_LE(key+8));
+        len -= 16;
+    }
+
+    if ( len >= 8 ) {
         v1 -= U8TO64_LE(key); key += 8;
-        v0 += U8TO64_LE(key); key += 8;
-        ZAPHOD64_MIX(v0,v1,v2,"MIX 2-WORDS B");
-        len -= 32;
-    }
-    switch ( len >> 3 ) {
-        case 3:
-                ZAPHOD64_WARN2("m0=%016lx m1=%016lx - ZAPHOD64 READ 2-WORDS C\n",
-                    U8TO64_LE(key),U8TO64_LE(key+8));
-                v1 -= U8TO64_LE(key); key += 8;
-                v0 += U8TO64_LE(key); key += 8;
-                ZAPHOD64_MIX(v0,v1,v2,"MIX 2-WORDS C");
-        case 1:
-                ZAPHOD64_WARN2("m0=%016lx %s",U8TO64_LE(key),"");
-                v1 -= U8TO64_LE(key); key += 8;
-                break;
-        case 2:
-                ZAPHOD64_WARN2("m0=%016lx m1=%016lx - ZAPHOD64 READ 2-WORDS D\n",
-                    U8TO64_LE(key),U8TO64_LE(key+8));
-                v1 -= U8TO64_LE(key); key += 8;
-                v0 += U8TO64_LE(key); key += 8;
-                ZAPHOD64_MIX(v0,v1,v2,"MIX 2-WORDS D");
-                break;
-        case 0:
-        default: break;
-    }
-    if (DEBUG_ZAPHOD64_HASH) {
-        uint64_t vx = ((U64)(key_len+1) << 56);
-        uint64_t vy = 0;
-        switch (len & 0x7) {
-            case 7: vx += (U64)key[6] << 48;
-            case 6: vx += (U64)U8TO16_LE(key+4) << 32;
-                    vx += (U64)U8TO32_LE(key);
-                    break;
-            case 5: vx += (U64)key[4] << 32;
-            case 4: vx += (U64)U8TO32_LE(key);
-                    break;
-            case 3: vx += (U64)key[2] << 16;
-            case 2: vx += U8TO16_LE(key);
-                    break;
-            case 1: vx += (U64)key[0];
-                    break;
-            case 0:
-            default:vy ^= 0xFF;
-                    break;
-        }
-        ZAPHOD64_WARN2("vx=%016lx vy=%016lx - ZAPHOD64 READ FINAL\n",vx,vy);
     }
 
     v0 += ((U64)(key_len+1) << 56);
@@ -288,6 +245,7 @@ ZAPHOD64_STATIC_INLINE U64 zaphod64_hash_with_state(
         default:v2 ^= 0xFF;
                 break;
     }
+
     ZAPHOD64_FINALIZE(v0,v1,v2);
     hash = v0 ^ v1 ^ v2;
 
