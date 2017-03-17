@@ -141,7 +141,7 @@
 
 SBOX_STATIC_INLINE void sbox_seed_state (
     const U8 *seed_ch,
-    const U8 *state_ch
+    U8 *state_ch
 ) {
     U64 *seed= (U64 *)seed_ch;
     U64 *state= (U64 *)state_ch;

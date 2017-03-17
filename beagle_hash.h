@@ -277,7 +277,7 @@ BEAGLE_STATIC_INLINE U32 beagle_hash_with_state_32_128_a(
 
 BEAGLE_STATIC_INLINE void beagle_seed_state_64_128_a(
     const U8 *seed_ch,
-    const U8 *seed_state_ch
+    U8 *seed_state_ch
 ) {
     U64 *seed_base= (U64 *)seed_ch;
     U64 *state= (U64 *)seed_state_ch;
