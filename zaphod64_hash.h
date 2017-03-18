@@ -204,8 +204,8 @@ ZAPHOD64_STATIC_INLINE U64 zaphod64_hash_with_state(
     const STRLEN key_len
 ) {
     U64 *state= (U64 *)state_ch;
-    U64 v0= state[0] ^ (0xb89b0f8e1655514fUL * (key_len + 3));
-    U64 v1= state[1] ^ (0x8c6f736011bd5127UL * (key_len + 2));
+    U64 v0= state[0];
+    U64 v1= state[1];
     U64 v2= state[2] ^ (0xc0f9edd07d89152fUL * (key_len + 1));
     U64 len= key_len;
     U64 hash;

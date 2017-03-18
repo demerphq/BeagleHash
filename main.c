@@ -34,13 +34,13 @@ const U64 stadtx_expected_hash = 0x5f7aa2a6f52125cdUl;
 /*---*/
 
 const U32 zaphod32_expected_state[3] = { 0xdaa1089c, 0xae1b8e20, 0x8dfb952e };
-const U32 zaphod32_expected_hash = 0xc6f3412c;
+const U32 zaphod32_expected_hash = 0x201afd88;
 
 /*---*/
 
 const U64 zaphod64_expected_state[3] = 
     { 0x7348467c9465b05a, 0xd3d08bc39fb12b4e, 0x67a0860b5474f3c7 };
-const U64 zaphod64_expected_hash = 0xbe93e83446aeefd4;
+const U64 zaphod64_expected_hash = 0x2ed781397cec97af;
 
 /*---*/
 typedef void (*pfSeedState) ( const U8 *seed, U8 *state );
@@ -67,30 +67,30 @@ void test64 (
     U64 a64;
     int failed_result;
 
-    int n= testnum++;
+    int n= ++testnum;
     seed_state((U8*)seed,(U8*)state);
     failed_result = memcmp(expected_state, state, statewords * sizeof(U64))!=0;
-    if (failed_result)
-        printf("#%s failed_result test %d:\n", name, n);
-    print64(" seed:", seed, seedwords);
-    print64("state:", state, statewords);
     if (failed_result) {
-        print64(" want:", expected_state, statewords);
         printf("not ");
         num_failed++;
     }
     printf("ok %d - %s state seeded as expected\n", n, name);
+    print64(" seed:", seed, seedwords);
+    print64("state:", state, statewords);
+    if (failed_result)
+        print64(" want:", expected_state, statewords);
 
-    n= testnum++;
+    n= ++testnum;
     a64= hash((U8*)state,test_string,test_string_len);
     failed_result = a64 != expected_hash;
-    if (failed_result)
-        printf("#%s failed_result test %d:\n", name, n);
-    printf("#hash: 0x%016lx\n",a64);
     if (failed_result){
-        printf("#want: 0x%016lx\nnot", expected_hash);
+        printf("not ");
         num_failed++;
     }
+    printf("ok %d - %s hashed test string as expected\n", n, name);
+    printf("#  hash: 0x%016lx\n",a64);
+    if (failed_result)
+        printf("#  want: 0x%016lx\n",expected_hash);
 }
 
 void test32 (
@@ -107,23 +107,22 @@ void test32 (
     seed_state((U8*)seed,(U8*)state);
     failed_result = memcmp(expected_state, state, statewords * sizeof(U32))!=0;
     if (failed_result)
-        printf("#%s failed_result test %d:\n", name, n);
+        printf("not ");
+    printf("ok %d - %s state seeded as expected\n", n, name);
     print32(" seed:", seed, seedwords);
     print32("state:", state, statewords);
-    if (failed_result) {
+    if (failed_result)
         print64(" want:", expected_state, statewords);
-        printf("not ");
-    }
-    printf("ok %d - %s state seeded as expected\n", n, name);
 
     n= testnum++;
     a32= hash((U8*)state,test_string,test_string_len);
     failed_result = a32 != expected_hash;
     if (failed_result)
-        printf("#%s failed_result test %d:\n", name, n);
-    printf("#hash: 0x%08x\n",a32);
+        printf("not ");
+    printf("ok %d - %s hashed test string as expected\n", n, name);
+    printf("#  hash: 0x%08x\n",a32);
     if (failed_result)
-        printf("#want: 0x%08x\nnot", expected_hash);
+        printf("#  want: 0x%08x\n", expected_hash);
 }
 
 int main(int argc, char **argv) {

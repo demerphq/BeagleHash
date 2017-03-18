@@ -165,7 +165,7 @@ ZAPHOD32_STATIC_INLINE U32 zaphod32_hash_with_state(
 ) {
     U32 *state= (U32 *)state_ch;
     U32 v0= state[0];
-    U32 v1= state[1] ^ (0x88ac0411 * (key_len + 2));
+    U32 v1= state[1];
     U32 v2= state[2] ^ (0xC41A7AB1 * (key_len + 1));
     U32 len= key_len;
     U32 hash;
@@ -175,17 +175,18 @@ ZAPHOD32_STATIC_INLINE U32 zaphod32_hash_with_state(
             (unsigned int)state[2], (unsigned int)key_len);
 
     while ( len >= 8 ){
-        v1 -= U8TO32_LE(key); key += 4;
-        v0 += U8TO32_LE(key); key += 4;
+        v1 -= U8TO32_LE(key+0);
+        v0 += U8TO32_LE(key+4);
         ZAPHOD32_MIX(v0,v1,v2,"MIX 2-WORDS A");
         len -= 8;
+        key += 8;
     }
 
     if (len >= 4 ) {
         v1 -= U8TO32_LE(key); key += 4;
     }
 
-    v0 += (U32)(len+1) << 24;
+    v0 += (U32)(key_len+1) << 24;
     switch (len & 0x3) {
         case 3: v0 += (U32)key[2] << 16;
         case 2: v0 += (U32)U8TO16_LE(key);
