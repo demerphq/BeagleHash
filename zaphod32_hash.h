@@ -130,6 +130,7 @@
 } STMT_END
 
 
+ZAPHOD32_STATIC_INLINE
 void zaphod32_seed_state (
     const U8 *seed_ch,
     U8 *state_ch
@@ -151,59 +152,101 @@ void zaphod32_seed_state (
     /* these are pseduo-randomly selected primes between 2**31 and 2**32
      * (I generated a big list and then randomly chose some from the list) */
     ZAPHOD32_SCRAMBLE32(state[0],0x9fade23b);
-    ZAPHOD32_SCRAMBLE32(state[0],0x8497242b);
     ZAPHOD32_SCRAMBLE32(state[1],0xaa6f908d);
-    ZAPHOD32_SCRAMBLE32(state[1],0xc95d22a9);
-    ZAPHOD32_SCRAMBLE32(state[2],0x9c5cc4e9);
     ZAPHOD32_SCRAMBLE32(state[2],0xcdf6b72d);
+    /* now that we have scrambled we do some mixing to avalanche the
+     * state bits to gether */
+    ZAPHOD32_MIX(state[0],state[1],state[2],"ZAPHOD32 SEED-STATE 1/3");
+    ZAPHOD32_MIX(state[0],state[1],state[2],"ZAPHOD32 SEED-STATE 2/3");
+    /* and then scramble them again with different primes */
+    ZAPHOD32_SCRAMBLE32(state[0],0xc95d22a9);
+    ZAPHOD32_SCRAMBLE32(state[1],0x8497242b);
+    ZAPHOD32_SCRAMBLE32(state[2],0x9c5cc4e9);
+    /* and one final mix */
+    ZAPHOD32_MIX(state[0],state[1],state[2],"ZAPHOD32 SEED-STATE 3/3");
 }
 
-ZAPHOD32_STATIC_INLINE U32 zaphod32_hash_with_state(
+ZAPHOD32_STATIC_INLINE
+U32 zaphod32_hash_with_state(
     const U8 *state_ch,
     const U8 *key,
     const STRLEN key_len
 ) {
     U32 *state= (U32 *)state_ch;
+    const U8 *end;
     U32 v0= state[0];
     U32 v1= state[1];
     U32 v2= state[2] ^ (0xC41A7AB1 * (key_len + 1));
     U32 len= key_len;
-    U32 hash;
 
     ZAPHOD32_WARN4("v0=%08x v1=%08x v2=%08x ln=%08x HASH START\n",
             (unsigned int)state[0], (unsigned int)state[1],
             (unsigned int)state[2], (unsigned int)key_len);
-
-    while ( len >= 8 ){
-        v1 -= U8TO32_LE(key+0);
-        v0 += U8TO32_LE(key+4);
-        ZAPHOD32_MIX(v0,v1,v2,"MIX 2-WORDS A");
-        len -= 8;
-        key += 8;
+    if (1) {
+        switch (len) {
+            default: goto zaphod32_read8;
+            case 12: v2 += (U32)key[11] << 24;
+            case 11: v2 += (U32)key[10] << 16;
+            case 10: v2 += (U32)U8TO16_LE(key+8);
+                     v1 -= U8TO32_LE(key+4);
+                     v0 += U8TO32_LE(key+0);
+                     goto zaphod32_finalize;
+            case 9: v2 += (U32)key[8];
+            case 8: v1 -= U8TO32_LE(key+4);
+                    v0 += U8TO32_LE(key+0);
+                    goto zaphod32_finalize;
+            case 7: v2 += (U32)key[6];
+            case 6: v0 += (U32)U8TO16_LE(key+4);
+                    v1 -= U8TO32_LE(key+0);
+                    goto zaphod32_finalize;
+            case 5: v0 += (U32)key[4];
+            case 4: v1 -= U8TO32_LE(key+0);
+                    goto zaphod32_finalize;
+            case 3: v2 += (U32)key[2]            * 0xa3c1b42d;
+            case 2: v1 += (U32)key[1]            * 0xc9d8e2b5;
+            case 1: v0 += (U32)key[0]            * 0x971c58e3;
+                    break;
+            case 0: v2 ^= 0xFF;
+        }
+        ZAPHOD32_MIX(v0,v1,v2,"MIX 2-WORDS SHORT-A");
+        ZAPHOD32_MIX(v0,v1,v2,"MIX 2-WORDS SHORT-B");
+        return v0 ^ v1 ^ v2;
     }
 
-    if (len >= 4 ) {
-        v1 -= U8TO32_LE(key); key += 4;
+    if (len >= 8) {
+zaphod32_read8:
+        len = key_len & 0x7;
+        end = key + key_len - len;
+        do {
+            v1 -= U8TO32_LE(key+0);
+            v0 += U8TO32_LE(key+4);
+            ZAPHOD32_MIX(v0,v1,v2,"MIX 2-WORDS A");
+            key += 8;
+        } while ( key < end );
     }
 
-    v0 += (U32)(key_len+1) << 24;
+    if ( len >= 4 ) {
+        v1 -= U8TO32_LE(key);
+        key += 4;
+    }
+
+    v0 += (U32)(key_len) << 24;
     switch (len & 0x3) {
-        case 3: v0 += (U32)key[2] << 16;
+        case 3: v2 += (U32)key[2];
         case 2: v0 += (U32)U8TO16_LE(key);
                 break;
         case 1: v0 += (U32)key[0];
                 break;
         case 0: v2 ^= 0xFF;
     }
-
+zaphod32_finalize:
     ZAPHOD32_FINALIZE(v0,v1,v2);
-    hash = v0 ^ v1 ^ v2;
 
     ZAPHOD32_WARN4("v0=%08x v1=%08x v2=%08x hh=%08x - FINAL\n\n",
             (unsigned int)v0, (unsigned int)v1, (unsigned int)v2,
-            (unsigned int)hash);
+            (unsigned int)v0 ^ v1 ^ v2);
 
-    return hash;
+    return v0 ^ v1 ^ v2;
 }
 
 ZAPHOD32_STATIC_INLINE U32 zaphod32_hash(
