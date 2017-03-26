@@ -1,6 +1,5 @@
 #ifndef DEBUG_ZAPHOD64_HASH
 #define DEBUG_ZAPHOD64_HASH 0
-#endif
 
 #if DEBUG_ZAPHOD64_HASH == 1
 #include <stdio.h>
@@ -265,4 +264,4 @@ ZAPHOD64_STATIC_INLINE U64 zaphod64_hash(
     return zaphod64_hash_with_state((U8*)state,key,key_len);
 }
 
-
+#endif
