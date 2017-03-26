@@ -1,6 +1,5 @@
 #ifndef DEBUG_PHAT_HASH
 #define DEBUG_PHAT_HASH 0
-#endif
 
 #if DEBUG_PHAT_HASH == 1
 #include <stdio.h>
@@ -426,3 +425,4 @@ PHAT_STATIC_INLINE U32 phat_hash(
     return final;
 }
 
+#endif
