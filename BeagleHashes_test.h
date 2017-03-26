@@ -34,6 +34,7 @@ void zaphod32_hash_with_state_smhasher_test(const void *key, STRLEN len, const v
 void zaphod64_seed_state_smhasher_test(int in_bits, const void *seed, void *state);
 void zaphod64_hash_with_state_smhasher_test(const void *key, STRLEN len, const void *seed, void *out);
 
+void phat_seed_state_smhasher_test(int in_bits, const void *seed, void *state);
 void phat_hash_with_state_smhasher_test (const void *key, STRLEN len, const void *seed, void *out);
 
 void sbox32_seed_state_smhasher(int in_bits, const void *seed, void *state);

@@ -83,13 +83,12 @@ void sbox32_hash_with_state_smhasher(const void *key, STRLEN len, const void *st
     *((U32 *)out)= sbox32_hash_with_state((U8*)state, (U8 *)key, len);
 }
 
-void phat_hash_smhasher_test(const void *key, STRLEN len, U32 seed_base, void *out) {
-    U32 seed[3]= { seed_base, 0, 0 };
-    *((U32 *)out)= phat_hash((U8*)seed, (U8 *)key, len);
+void phat_seed_state_smhasher_test(int in_bits, const void *seed, void *state) {
+    phat_seed_state((U8*)seed,(U8*)state);
 }
 
 void phat_hash_with_state_smhasher_test(const void *key, STRLEN len, const void *seed, void *out) {
-    *((U32 *)out)= phat_hash((U8*)seed, (U8 *)key, len);
+    *((U32 *)out)= phat_hash_with_state((U8*)seed, (U8 *)key, len);
 }
 
 #ifdef __cplusplus

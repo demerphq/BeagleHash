@@ -1,6 +1,6 @@
 #ifndef DEBUG_PHAT_HASH
 #define DEBUG_PHAT_HASH 0
-
+#include <string.h>
 #if DEBUG_PHAT_HASH == 1
 #include <stdio.h>
 #define PHAT_WARN6(pat,v0,v1,v2,v3,v4,v5)    printf(pat, v0, v1, v2, v3, v4, v5)
@@ -353,7 +353,15 @@ Small key speed test -   64-byte keys -    66.74 cycles/hash
     PHAT_MIX(v0,v1,v2,v3,"" text);\
 } STMT_END
 
-PHAT_STATIC_INLINE U32 phat_hash(
+PHAT_STATIC_INLINE
+void phat_seed_state (
+    const U8 *seed_ch,
+    U8 *state_ch
+) {
+    memcpy(state_ch, seed_ch, sizeof(U32) * 3);
+}
+
+PHAT_STATIC_INLINE U32 phat_hash_with_state(
     const U8 *seed_ch,
     const U8 *key,
     const STRLEN key_len

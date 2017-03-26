@@ -122,9 +122,10 @@ const U64 zaphod64_expected_state[3] =
     { 0x7348467c9465b05a, 0xd3d08bc39fb12b4e, 0x67a0860b5474f3c7 };
 const U64 zaphod64_expected_hash = 0x2ed781397cec97af;
 
+/*---*/
 
-
-
+const U32 phat_expected_state[3] = { 0x90123456, 0x12345678, 0x10abcdef };
+const U32 phat_expected_hash = 0xa281bec2;
 
 int main(int argc, char **argv) {
     U64 state[4];
@@ -141,5 +142,8 @@ int main(int argc, char **argv) {
     
     test64("Zaphod64", zaphod64_seed_state, zaphod64_hash_with_state,
             seed, zaphod64_expected_state, zaphod64_expected_hash, 3, 3);
+
+    test32("Phat", phat_seed_state, phat_hash_with_state,
+            (U32*)seed, phat_expected_state, phat_expected_hash, 3, 3);
 
 }
