@@ -4,10 +4,11 @@ extern "C" {
 
 #include <stdlib.h>
 #include <stdio.h>
+#include "BeagleHashes_test.h"
 #include "beagle_hash.h"
 #include "stadtx_hash.h"
 #include "phat_hash.h"
-#include "sbox_hash.h"
+#include "sbox32_hash.h"
 #include "zaphod32_hash.h"
 #include "zaphod64_hash.h"
 
@@ -67,12 +68,19 @@ void zaphod64_hash_with_state_smhasher_test(const void *key, STRLEN len, const v
     *((U64 *)out)= zaphod64_hash_with_state((U8*)state, (U8 *)key, len);
 }
 
-void sbox_seed_state_smhasher_test(int in_bits, const void *seed, void *state) {
-    sbox_seed_state((U8*)seed,(U8*)state);
+void sbox32_seed_state_smhasher(int in_bits, const void *seed, void *state) {
+    if ( in_bits == 96 ) {
+        sbox32_seed_state96((U8*)seed,(U8*)state);
+    } else if ( in_bits == 128 ) {
+        sbox32_seed_state128((U8*)seed,(U8*)state);
+    } else {
+        printf("Cant handle %d bit seeds in sbox32_seed_state_smhasher", in_bits);
+        exit(1);
+    }
 }
 
-void sbox_hash_with_state_smhasher_test(const void *key, STRLEN len, const void *state, void *out) {
-    *((U64 *)out)= sbox_hash_with_state((U8*)state, (U8 *)key, len);
+void sbox32_hash_with_state_smhasher(const void *key, STRLEN len, const void *state, void *out) {
+    *((U32 *)out)= sbox32_hash_with_state((U8*)state, (U8 *)key, len);
 }
 
 void phat_hash_smhasher_test(const void *key, STRLEN len, U32 seed_base, void *out) {
