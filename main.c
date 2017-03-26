@@ -3,9 +3,18 @@
 #include "zaphod32_hash.h"
 #include "zaphod64_hash.h"
 #include "phat_hash.h"
-#include "sbox_hash.h"
+#include "sbox32_hash.h"
 #include "beagle_hash.h"
 
+/*---*/
+char *test_string = "The shaved yak drank from the bitter well";
+STRLEN test_string_len;
+const U64 seed[3] = { 0x1234567890123456UL, 0x9876543210ABCDEF, 0xABCDEF0123456789 };
+/*---*/
+typedef void (*pfSeedState) ( const U8 *seed, U8 *state );
+typedef U32 (*pfHash32) ( const U8 *state, const U8 *blob, const STRLEN len);
+typedef U64 (*pfHash64) ( const U8 *state, const U8 *blob, const STRLEN len);
+/*---*/
 
 void print64(const char *str, const void *b, int num) {
     U64 *blocks = (U64 *)b;
@@ -24,35 +33,6 @@ void print32(const char *str, const void *b, int num) {
     }
     printf(" }\n");
 }
-
-/*---*/
-
-const U64 stadtx_expected_state[4] = 
-    { 0x0d42d19b274a6366, 0x7cdddde71be117f0, 0x1f4db39c60100ad2, 0xd430c8ca8ac732eb };
-const U64 stadtx_expected_hash = 0x5f7aa2a6f52125cdUl;
-
-/*---*/
-
-const U32 zaphod32_expected_state[3] = { 0xdaa1089c, 0xae1b8e20, 0x8dfb952e };
-const U32 zaphod32_expected_hash = 0x201afd88;
-
-/*---*/
-
-const U64 zaphod64_expected_state[3] = 
-    { 0x7348467c9465b05a, 0xd3d08bc39fb12b4e, 0x67a0860b5474f3c7 };
-const U64 zaphod64_expected_hash = 0x2ed781397cec97af;
-
-/*---*/
-typedef void (*pfSeedState) ( const U8 *seed, U8 *state );
-typedef U32 (*pfHash32) ( const U8 *state, const U8 *blob, const STRLEN len);
-typedef U64 (*pfHash64) ( const U8 *state, const U8 *blob, const STRLEN len);
-
-/*---*/
-
-char *test_string = "The shaved yak drank from the bitter well";
-STRLEN test_string_len;
-const U64 seed[3] = { 0x1234567890123456UL, 0x9876543210ABCDEF, 0xABCDEF0123456789 };
-
 
 int testnum = 0;
 int num_failed = 0;
@@ -112,7 +92,7 @@ void test32 (
     print32(" seed:", seed, seedwords);
     print32("state:", state, statewords);
     if (failed_result)
-        print64(" want:", expected_state, statewords);
+        print32(" want:", expected_state, statewords);
 
     n= testnum++;
     a32= hash((U8*)state,test_string,test_string_len);
@@ -124,6 +104,27 @@ void test32 (
     if (failed_result)
         printf("#  want: 0x%08x\n", expected_hash);
 }
+
+/*---*/
+
+const U64 stadtx_expected_state[4] =
+    { 0x0d42d19b274a6366, 0x7cdddde71be117f0, 0x1f4db39c60100ad2, 0xd430c8ca8ac732eb };
+const U64 stadtx_expected_hash = 0x5f7aa2a6f52125cdUl;
+
+/*---*/
+
+const U32 zaphod32_expected_state[3] = { 0x90894736, 0x850eb0a9, 0xd196568d };
+const U32 zaphod32_expected_hash = 0x3b0c56d9;
+
+/*---*/
+
+const U64 zaphod64_expected_state[3] =
+    { 0x7348467c9465b05a, 0xd3d08bc39fb12b4e, 0x67a0860b5474f3c7 };
+const U64 zaphod64_expected_hash = 0x2ed781397cec97af;
+
+
+
+
 
 int main(int argc, char **argv) {
     U64 state[4];

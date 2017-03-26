@@ -1,6 +1,5 @@
 #ifndef DEBUG_ZAPHOD32_HASH
 #define DEBUG_ZAPHOD32_HASH 0
-#endif
 
 #if DEBUG_ZAPHOD32_HASH == 1
 #include <stdio.h>
@@ -137,6 +136,7 @@ void zaphod32_seed_state (
 ) {
     U32 *seed= (U32 *)seed_ch;
     U32 *state= (U32 *)state_ch;
+
     /* hex expansion of pi, skipping first two digits. pi= 3.2[43f6...]*/
     /* pi value in hex from here:
      * http://turner.faculty.swau.edu/mathematics/materialslibrary/pi/pibases.html*/
@@ -154,16 +154,26 @@ void zaphod32_seed_state (
     ZAPHOD32_SCRAMBLE32(state[0],0x9fade23b);
     ZAPHOD32_SCRAMBLE32(state[1],0xaa6f908d);
     ZAPHOD32_SCRAMBLE32(state[2],0xcdf6b72d);
+
     /* now that we have scrambled we do some mixing to avalanche the
      * state bits to gether */
-    ZAPHOD32_MIX(state[0],state[1],state[2],"ZAPHOD32 SEED-STATE 1/3");
-    ZAPHOD32_MIX(state[0],state[1],state[2],"ZAPHOD32 SEED-STATE 2/3");
+    ZAPHOD32_MIX(state[0],state[1],state[2],"ZAPHOD32 SEED-STATE A 1/4");
+    ZAPHOD32_MIX(state[0],state[1],state[2],"ZAPHOD32 SEED-STATE A 2/4");
+    ZAPHOD32_MIX(state[0],state[1],state[2],"ZAPHOD32 SEED-STATE A 3/4");
+    ZAPHOD32_MIX(state[0],state[1],state[2],"ZAPHOD32 SEED-STATE A 4/4");
+
     /* and then scramble them again with different primes */
     ZAPHOD32_SCRAMBLE32(state[0],0xc95d22a9);
     ZAPHOD32_SCRAMBLE32(state[1],0x8497242b);
     ZAPHOD32_SCRAMBLE32(state[2],0x9c5cc4e9);
-    /* and one final mix */
-    ZAPHOD32_MIX(state[0],state[1],state[2],"ZAPHOD32 SEED-STATE 3/3");
+
+    /* and a thorough final mix */
+    ZAPHOD32_MIX(state[0],state[1],state[2],"ZAPHOD32 SEED-STATE B 1/5");
+    ZAPHOD32_MIX(state[0],state[1],state[2],"ZAPHOD32 SEED-STATE B 2/5");
+    ZAPHOD32_MIX(state[0],state[1],state[2],"ZAPHOD32 SEED-STATE B 3/5");
+    ZAPHOD32_MIX(state[0],state[1],state[2],"ZAPHOD32 SEED-STATE B 4/5");
+    ZAPHOD32_MIX(state[0],state[1],state[2],"ZAPHOD32 SEED-STATE B 5/5");
+
 }
 
 ZAPHOD32_STATIC_INLINE
@@ -174,15 +184,15 @@ U32 zaphod32_hash_with_state(
 ) {
     U32 *state= (U32 *)state_ch;
     const U8 *end;
+    U32 len = key_len;
     U32 v0= state[0];
     U32 v1= state[1];
     U32 v2= state[2] ^ (0xC41A7AB1 * (key_len + 1));
-    U32 len= key_len;
 
     ZAPHOD32_WARN4("v0=%08x v1=%08x v2=%08x ln=%08x HASH START\n",
             (unsigned int)state[0], (unsigned int)state[1],
             (unsigned int)state[2], (unsigned int)key_len);
-    if (1) {
+    {
         switch (len) {
             default: goto zaphod32_read8;
             case 12: v2 += (U32)key[11] << 24;
@@ -202,15 +212,30 @@ U32 zaphod32_hash_with_state(
             case 5: v0 += (U32)key[4];
             case 4: v1 -= U8TO32_LE(key+0);
                     goto zaphod32_finalize;
-            case 3: v2 += (U32)key[2]            * 0xa3c1b42d;
-            case 2: v1 += (U32)key[1]            * 0xc9d8e2b5;
-            case 1: v0 += (U32)key[0]            * 0x971c58e3;
+            case 3: v2 += (U32)key[2];
+            case 2: v0 += (U32)U8TO16_LE(key);
+                    break;
+            case 1: v0 += (U32)key[0];
                     break;
             case 0: v2 ^= 0xFF;
+                    break;
+
         }
-        ZAPHOD32_MIX(v0,v1,v2,"MIX 2-WORDS SHORT-A");
-        ZAPHOD32_MIX(v0,v1,v2,"MIX 2-WORDS SHORT-B");
-        return v0 ^ v1 ^ v2;
+        v0 -= v2;
+        v2 = ROTL32(v2, 8) ^ v0;
+        v0 = ROTR32(v0,16) + v2;
+        v2 += v0;
+        v0 += v0 >> 9;
+        v0 += v2;
+        v2 ^= v0;
+        v2 += v2 << 4;
+        v0 -= v2;
+        v2 = ROTR32(v2, 8) ^ v0;
+        v0 = ROTL32(v0,16) ^ v2;
+        v2 = ROTL32(v2,10) + v0;
+        v0 = ROTR32(v0,30) + v2;
+        v2 = ROTR32(v2,12);
+        return v0 ^ v2;
     }
 
     if (len >= 8) {
@@ -259,3 +284,4 @@ ZAPHOD32_STATIC_INLINE U32 zaphod32_hash(
     return zaphod32_hash_with_state((U8*)state,key,key_len);
 }
 
+#endif
