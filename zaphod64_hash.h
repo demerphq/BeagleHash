@@ -1,5 +1,9 @@
+#ifndef ZAPHOD64_HASH_H
+#define ZAPHOD64_HASH_H
+
 #ifndef DEBUG_ZAPHOD64_HASH
 #define DEBUG_ZAPHOD64_HASH 0
+#endif
 
 #if DEBUG_ZAPHOD64_HASH == 1
 #include <stdio.h>
@@ -214,7 +218,7 @@ ZAPHOD64_STATIC_INLINE U64 zaphod64_hash_with_state(
             (unsigned long)state[2], (unsigned long)key_len);
 
     while ( len >= 16 ) {
-        ZAPHOD64_WARN2("m0=%016lx m1=%016lx - ZAPHOD64 READ 2-WORDS A\n",
+        ZAPHOD64_WARN2("m0=%016llx m1=%016llx - ZAPHOD64 READ 2-WORDS A\n",
             U8TO64_LE(key),U8TO64_LE(key+8));
         v1 -= U8TO64_LE(key); key += 8;
         v0 += U8TO64_LE(key); key += 8;
